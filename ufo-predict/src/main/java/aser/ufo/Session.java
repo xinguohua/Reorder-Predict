@@ -47,7 +47,6 @@ public class Session {
     config = c;
     exe = Executors.newFixedThreadPool(UFO.PAR_LEVEL);
     traceLoader = new EventLoader(exe, config.traceDir);
-//    solver = new JUfoSolver(config);
     solver = new SimpleSolver(config);
   }
 

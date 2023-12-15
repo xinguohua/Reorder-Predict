@@ -280,10 +280,6 @@ public CModuleList getModuleList() {
   }
 
 public void preprocessWaitNotify() {
-	
-	
-	long time1 = System.currentTimeMillis();
-	
 	ShortOpenHashSet aliveTids_ = new ShortOpenHashSet(80);
 		  for (short tid : allThreads) {
 		      FileInfo fi = fileInfoMap.get(tid);
@@ -300,19 +296,8 @@ public void preprocessWaitNotify() {
 		    	  	fi.fileOffset=0;
 		    	  	fi.lastFileOffset=0;
 		      }
-		  }  
-		  
-		  //LOG.info("Total Events:  "+ TLEventSeq.stat.c_total);
-  		  //LOG.info("Num of ISYNC nodes {}", TLEventSeq.stat.c_isync);
-
-  		long time2 = System.currentTimeMillis();
-
-  	    System.out.println("Total loading time:  "+ (time2-time1)+"ms");
-  	    
+		  }
   	    NewReachEngine.setThreadIdsVectorClock(aliveTids_.toShortArray());
 		NewReachEngine.postprocessing();
-	  	   
-		System.out.println("Total reachability analysis time:  "+ (System.currentTimeMillis()-time2)+"ms");
-
 }
 }

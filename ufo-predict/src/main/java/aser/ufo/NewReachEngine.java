@@ -87,9 +87,7 @@ public static void saveToThreadLastNode(short tid, TEndNode node)
     tidLastNode.put(tid, node);
 }
 public static void postprocessing()
-{  
-	//TODO: need to consider the order of these nodes
-     
+{
 	for(int i=0;i<orderedSyncNodeList.size();i++)
 	{
 		ISyncNode node = orderedSyncNodeList.get(i);

@@ -1,5 +1,6 @@
 package aser.ufo.trace;
 
+import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,14 +49,17 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
       bnext = br.read();
 
       try {
+        System.out.println("TheadId=======tid" + JSONObject.toJSONString(tid));
+
         while (bnext != -1) {
 
           AbstractNode node = getNode(tid, bnext, br, seq.stat);
-
           seq.stat.c_total++;
           seq.numOfEvents++;
 
           if (node != null) {
+            System.out.println("TheadId=======Node" +node.getClass().getName() + JSONObject.toJSONString(node));
+
             //assign global id to node: tid - local_event_number (consistently!)
             //unique
             node.gid = Bytes.longs.add(tid, seq.numOfEvents);
