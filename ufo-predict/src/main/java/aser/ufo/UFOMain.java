@@ -16,7 +16,6 @@ public class UFOMain {
   private static final Logger LOG = LoggerFactory.getLogger(UFOMain.class);
 
   public static void main(String[] args) throws Exception {
-
     Configuration config = new Configuration(args);
     extendConfig(config);
     Session s = new Session2(config);

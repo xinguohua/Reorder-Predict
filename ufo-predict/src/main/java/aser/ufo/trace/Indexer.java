@@ -84,16 +84,6 @@ public class Indexer {
       // shared acc and all other (nLock dealloc ...)
       protected Short2ObjectOpenHashMap<ArrayList<AbstractNode>> tid2sqeNodes = new Short2ObjectOpenHashMap<ArrayList<AbstractNode>>(UFO.INITSZ_L);
 
-      //
-//    void trim() {
-//      allNodeSeq.trimToSize();
-//      seqRead.trimToSize();
-////    seqWrite.trimToSize();
-//      initWrites.trim();
-//      addr2SeqWrite.trim();
-////    addr2sqeAcc.trim();
-//      tid2sqeNodes.trim();
-//    }
       void destroy() {
     	  tid2seqReads = null;
 //    seqWrite.destroy();
@@ -234,51 +224,12 @@ public class Indexer {
           if (node instanceof AllocNode) {
             metaInfo.countAlloc++;
             AllocNode an = (AllocNode) node;
-//          long addrLeft = an.addr;
-//          long addrRight = an.addr + an.length;
-//          AbstractNode oldAn = _allocationTree.put(addrLeft, an);
-//          _allocationTree.put(addrRight, an);
-//
-//          if (CHECK_MEM_ERROR) {
-//            if (oldAn != null) {
-//              LOG.error("!!!! memory allocation at same address:{}  old:{}  new length: {}", addrLeft, oldAn, an.length);
-//            }
-//            Long addrGE = _allocationTree.ceilingKey(addrLeft);
-//            if (addrGE != null && addrGE <= addrRight) {
-//              LOG.error(
-//                  "!!! memory allocation overlap, left:{}  previous right bound:{} current right bound {}",
-//                  addrLeft, addrGE, addrRight);
-//            }
-//            Long addrLE = _allocationTree.floorKey(addrRight);
-//            if (addrLE != null && addrLE != addrLeft) {
-//              LOG.error(
-//                  "!!! memory allocation overlap, right:{}  previous left bound: {}   current left bound {}",
-//                  addrLeft, addrLE, addrLeft);
-//            }
-//          }
-
             allocator.push(an);
 
           } else if (node instanceof DeallocNode) {
             // matching delloc with alloc, replacing alloc with dealloc
             metaInfo.countDealloc++;
             DeallocNode dnode = (DeallocNode) node;
-//          long addrL = dnode.addr;
-//          AbstractNode oldNode = _allocationTree.get(addrL);
-//          if (oldNode == null) {
-//            LOG.warn("!!! could not find matching alloc at address {}", addrL);
-//            continue;
-//          } else if (oldNode instanceof AllocNode) {
-//            dnode.length = ((AllocNode) oldNode).length;
-//            _allocationTree.put(addrL, dnode); // replace left
-//
-////              long addrR = addrL + len;
-////              AbstractNode oldrn = _allocationTree.put(addrR, dnode); // left and right
-////              assert (oldrn == oldNode);
-//
-//          } else if (oldNode instanceof DeallocNode)
-//            LOG.warn("!!! memory deallocate at same address " + addrL + "  ignoring current one");
-
             allocator.insert(dnode);
           } else if (node instanceof FuncExitNode || node instanceof FuncEntryNode) {
             ArrayList<AbstractNode> callseq = tid2CallSeq.get(curTid);
@@ -289,13 +240,11 @@ public class Indexer {
             callseq.add(node);
             metaInfo.countFuncCall++;
           } else if (node instanceof ISyncNode) {
-//              handleSync(tid, (ISyncNode) node);
             handleSync2(curTid, (ISyncNode) node);
           }
 
         } // for one tid
       } // for all tid
-//    checkSyncStack();
       finishSync();
     }
 
@@ -376,21 +325,6 @@ public class Indexer {
       // index: addr -> acc
       long addr = node.getAddr();
 
-//    Map.Entry<Long, AbstractNode> e = _allocationTree.floorEntry(addr);
-//    if (e != null && e.getValue() instanceof DeallocNode) {
-//      DeallocNode dn = (DeallocNode) e.getValue();
-//      if (dn.tid != tid) {
-//        shared.acc2Dealloc.put(node, dn);
-////        ArrayList<MemAccNode> seqAcc = dealloc2seqAcc.get(addr);
-////        if (seqAcc == null) {
-////          seqAcc = new ArrayList<MemAccNode>(INITSZ_S);
-////          dealloc2seqAcc.put(addr, seqAcc);
-////        }
-////        seqAcc.add(node);
-//      }
-//    } else if (CHECK_ALLOC_OVERLAP) {
-//      LOG.error("!!! could not match memory access at " + addr + "  with free()");
-//    }
       // index: seq read, seq write
       if (node instanceof RangeReadNode) {
 
@@ -418,20 +352,9 @@ public class Indexer {
       }
     }
 
-//  protected static void addAddr2TidWrite(Long2ObjectOpenHashMap<IntOpenHashSet> _addr2TidWrites,
-//                                int tid, long addr) {
-//    IntOpenHashSet tidSetW = _addr2TidWrites.get(addr);
-//    if (tidSetW == null) {
-//      tidSetW = new IntOpenHashSet(UFO.INITSZ_S);
-//      _addr2TidWrites.put(addr, tidSetW);
-//    }
-//    tidSetW.add(tid);
-//  }
-
     Long2ObjectOpenHashMap<ArrayList<LockPair>> addr2LockPairLs = new Long2ObjectOpenHashMap<ArrayList<LockPair>>(UFO.INITSZ_S);
 
     protected void handleSync2(short tid, ISyncNode node) {
-
       long addr = node.getAddr();
       ArrayList<ISyncNode> syncNodes = _syncNodesMap.get(addr);
       if (syncNodes == null) {
@@ -440,15 +363,6 @@ public class Indexer {
       }
       syncNodes.add(node);
 
-//      if (node instanceof TStartNode) {
-//        thrStartNodeList.add((TStartNode) node);
-//        metaInfo.countTStart++;
-//
-//      } else if (node instanceof TJoinNode) {
-//        joinNodeList.add((TJoinNode) node);
-//        metaInfo.countTJoin++;
-//
-//      } else
       if (node instanceof LockNode) {
         Stack<ISyncNode> stack = _tid2SyncStack.get(tid);
         if (stack == null) {
@@ -485,16 +399,6 @@ public class Indexer {
         else
           stack.pop();//handle reentrant nLock
       } // nUnlock
-      
-//      else if (node instanceof WaitNode) {
-//    	  	saveToWaitNotifyList((IWaitNotifyNode) node);
-//      }
-//      else if (node instanceof NotifyNode) {
-//    	  	saveToWaitNotifyList((IWaitNotifyNode) node);
-//      }
-//      else if (node instanceof NotifyAllNode) {
-//    	  	saveToWaitNotifyList((IWaitNotifyNode) node);
-//      }
     }
 
 

@@ -275,7 +275,7 @@ public class EventLoader {
 
 //  static long gidGen = 0; // a global taskId (gid) representing their order in the trace,
 
-  public CModuleList getModuleList() {
+public CModuleList getModuleList() {
     return moduleList;
   }
 

@@ -146,56 +146,6 @@ public static void postprocessing()
   		}
 	
 	}
-//    for (TStartNode node : thrStartNodeList) {
-//        short tid = node.tidKid;
-//        AbstractNode fnode = tidFirstNode.get(tid);
-//        if (fnode != null)
-//         addEdge(node, fnode);
-//      }
-//
-//      for (TJoinNode node : joinNodeList) {
-//        short tid = node.tid_join;
-//        AbstractNode lnode = tidLastNode.get(tid);
-//        if (lnode != null) {
-//          addEdge(lnode, node);
-//        }
-//      }
-
-      //add wait-notify to reach Engine
-//      for (ArrayList<IWaitNotifyNode> list: cond2WaitNotifyLs.values())
-//      {	
-//    	  if(list.size()>1)
-//    	  {
-//    	  	int curIndex = 0;
-//    	  	for(int k =0; k<list.size(); k++)
-//    	  	{
-//    	  		ISyncNode node = list.get(k);
-//    	  		if(node instanceof WaitNode)
-//    	  		{
-//    	  			
-//    	  		}
-//    	  		else if (node instanceof NotifyNode)
-//    	  		{
-//    	  			ISyncNode wait_node_at_curIndex = list.get(curIndex++);
-//    	  			while (! (wait_node_at_curIndex instanceof WaitNode) && curIndex<k)
-//    	  				wait_node_at_curIndex = list.get(curIndex++);
-//    	  			
-//    	  			if(wait_node_at_curIndex instanceof WaitNode)
-//    	  				addEdge(node, wait_node_at_curIndex);//signal to wait
-//    	  		}
-//    	  		else if (node instanceof NotifyAllNode)
-//    	  		{
-//    	  			for(;curIndex<k;curIndex++)
-//    	  			{
-//    	  				ISyncNode wait_node_at_curIndex = list.get(curIndex);
-//    	  				if(wait_node_at_curIndex instanceof WaitNode)
-//    	  					addEdge(node, wait_node_at_curIndex);//signal to all wait
-//    	  			}
-//    	  				
-//    	  		}
-//    	  	}
-//    	  }
-//      }
 }
 
   private static HashMap<Long,VectorClock> long2VCs = new HashMap<Long, VectorClock>();

@@ -36,10 +36,10 @@ public class Session2 extends Session {
   
   @Override
   public void start() {
-	  
-	  traceLoader.preprocessWaitNotify();//JEFF
-	  printTraceStats();//JEFF
-	  
+
+    traceLoader.preprocessWaitNotify();//JEFF
+    printTraceStats();//JEFF
+
     sessionID = 0;
     uafID = 0;
 
@@ -50,87 +50,82 @@ public class Session2 extends Session {
 
       loadedEventCount += indexer.metaInfo.rawNodeCount;
 
-      
+
       //ADD THREAD FORK-JOIN ORDER TO PRUNE AWAY OBVIOUS CASES
-      
+
       HashMap<MemAccNode, HashSet<AllocaPair>> candidateUafLs = indexer.getMachtedAcc();
-      
-     // if(candidateUafLs.isEmpty())continue;
-      
-      if (config.fast_detect)
-      {
-	      LOG.info("candidateUafLs: {}", candidateUafLs.size());
-	      Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter1 = candidateUafLs.entrySet().iterator();
-	      while (iter1.hasNext()) {
-	    	  
-	    	  Map.Entry<MemAccNode, HashSet<AllocaPair>> e = iter1.next();
-	          final MemAccNode acc = e.getKey();
-	          final HashSet<AllocaPair> pairs = e.getValue();
-	          
-	      writerD.append("\r\n------- #"+acc.tid+" use call stack  \r\n");
-	      writeCallStack(indexer, acc);
-	
-		     for(AllocaPair pair: pairs)
-		     {
-		    	 DeallocNode free = pair.deallocNode;
-		        writerD.append("\r\n------- #"+free.tid+" free call stack  \r\n");
-		        writeCallStack(indexer, free);
-		     }
-	      }
-	      
-	      
-	      __c3 += candidateUafLs.size();
-	//      5485
-	
-	 //     System.out.println("candidateUafLs.size()  " + candidateUafLs.size() + "    " + __c3);
-	
-	//      if (System.currentTimeMillis() > 1) {
-	//        System.out.println(" continue;");
-	//        continue;
-	//      }
-	
-	      __c1 += indexer.metaInfo.sharedAddrs.size();
-	      for (HashSet<AllocaPair> sp : candidateUafLs.values()) {
-	        if (sp.size() > 1)
-	          __c2++;
-	      }
 
-      
-        
-      }
-      else
-	      {
-      prepareConstraints(indexer);
-      
-      solver.setCurrentIndexer(indexer);
+      // if(candidateUafLs.isEmpty())continue;
 
-      ct_candidataUaF.add(candidateUafLs.size());
+      if (config.fast_detect) {
+        LOG.info("candidateUafLs: {}", candidateUafLs.size());
+        Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter1 = candidateUafLs.entrySet().iterator();
+        while (iter1.hasNext()) {
 
-      writerD.append("#" + sessionID + " Session")
-          .append("   candidateUafLs: " + candidateUafLs.size()).append('\n');
+          Map.Entry<MemAccNode, HashSet<AllocaPair>> e = iter1.next();
+          final MemAccNode acc = e.getKey();
+          final HashSet<AllocaPair> pairs = e.getValue();
+
+          writerD.append("\r\n------- #" + acc.tid + " use call stack  \r\n");
+          writeCallStack(indexer, acc);
+
+          for (AllocaPair pair : pairs) {
+            DeallocNode free = pair.deallocNode;
+            writerD.append("\r\n------- #" + free.tid + " free call stack  \r\n");
+            writeCallStack(indexer, free);
+          }
+        }
 
 
-      Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
-      while (iter.hasNext()) {
-        List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
-        if (ls != null && ls.size() > 0)
-          outputUafLs(ls, indexer);
-      }
+        __c3 += candidateUafLs.size();
+        //      5485
 
-      if (solver.ct_constr.size() > 0) {
-        ct_vals.push(solver.ct_vals);
-        Pair<Integer, Long> max_total = _Max_total(solver.ct_constr);
-        ct_constr.push(max_total.value.intValue());
-        if (max_total.value > Integer.MAX_VALUE)
-          throw new RuntimeException("Overflow long -> int " + max_total.value);
-        ct_max_constr.push(max_total.key);
+        //     System.out.println("candidateUafLs.size()  " + candidateUafLs.size() + "    " + __c3);
+
+        //      if (System.currentTimeMillis() > 1) {
+        //        System.out.println(" continue;");
+        //        continue;
+        //      }
+
+        __c1 += indexer.metaInfo.sharedAddrs.size();
+        for (HashSet<AllocaPair> sp : candidateUafLs.values()) {
+          if (sp.size() > 1)
+            __c2++;
+        }
+
+
+      } else {
+        prepareConstraints(indexer);
+
+        solver.setCurrentIndexer(indexer);
+
+        ct_candidataUaF.add(candidateUafLs.size());
+
+        writerD.append("#" + sessionID + " Session")
+                .append("   candidateUafLs: " + candidateUafLs.size()).append('\n');
+
+
+        Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
+        while (iter.hasNext()) {
+          List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
+          if (ls != null && ls.size() > 0)
+            outputUafLs(ls, indexer);
+        }
+
+        if (solver.ct_constr.size() > 0) {
+          ct_vals.push(solver.ct_vals);
+          Pair<Integer, Long> max_total = _Max_total(solver.ct_constr);
+          ct_constr.push(max_total.value.intValue());
+          if (max_total.value > Integer.MAX_VALUE)
+            throw new RuntimeException("Overflow long -> int " + max_total.value);
+          ct_max_constr.push(max_total.key);
 //        int avg = _Max_total.value / solver.ct_constr.size();
 //        ct_constr_max_avg.add(new Pair<Integer, Integer>(_Max_total.key, avg));
-      }
-      solver.reset(); // release constraints for this round
-      writerD.append("\r\n");
-    } // while
-    
+        }
+        solver.reset(); // release constraints for this round
+        writerD.append("\r\n");
+      } // while
+
 
     }
 //    System.out.println(__c1 + "   " + __c2 + "   " + __c3);
