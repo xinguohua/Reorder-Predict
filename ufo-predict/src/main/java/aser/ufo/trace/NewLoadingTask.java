@@ -43,89 +43,55 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         if (bnext != -1) {
           header = getHeader(bnext, br);
           seq.header = header;
-//          if (header.data == 1) {
-//            br.read();// move 1B forward, because br.finish() will set 1B backward
-//            br.finish(fileInfo);
-//            br = new UnCompressorReader();
-//            br.init(fileInfo);
-//          }
         }
       }
       bnext = br.read();
-      
+
       try {
-      while (bnext != -1) {
-    	  
-        AbstractNode node = getNode(tid, bnext, br, seq.stat);
+        while (bnext != -1) {
 
-        seq.stat.c_total++;
-        seq.numOfEvents++;
-        
-        if (node != null) {          
+          AbstractNode node = getNode(tid, bnext, br, seq.stat);
 
-//       	 if(seq.stat.c_isync%1000==0)
-//       		 LOG.info("Num of ISYNC nodes {}", seq.stat.c_isync);
-       	 
-        	//assign global id to node: tid - local_event_number (consistently!)
-       	 //unique 
-        	node.gid = Bytes.longs.add(tid, seq.numOfEvents);
-        	
+          seq.stat.c_total++;
+          seq.numOfEvents++;
 
-        //LOG.debug(node.toString());//JEFF
-
-        	if(node instanceof TBeginNode)
-        	{
-        		NewReachEngine.saveToThreadFirstNode(tid, (TBeginNode) node);
-        	}
-        	else if (node instanceof TEndNode)
-        	{
-        		NewReachEngine.saveToThreadLastNode(tid, (TEndNode) node);
-        	}
-        	else  if (node instanceof TStartNode) {
-        		
+          if (node != null) {
+            //assign global id to node: tid - local_event_number (consistently!)
+            //unique
+            node.gid = Bytes.longs.add(tid, seq.numOfEvents);
+            if (node instanceof TBeginNode) {
+              NewReachEngine.saveToThreadFirstNode(tid, (TBeginNode) node);
+            } else if (node instanceof TEndNode) {
+              NewReachEngine.saveToThreadLastNode(tid, (TEndNode) node);
+            } else if (node instanceof TStartNode) {
               NewReachEngine.saveToStartNodeList((TStartNode) node);
-              
             } else if (node instanceof TJoinNode) {
-
-                NewReachEngine.saveToJoinNodeList((TJoinNode) node);
+              NewReachEngine.saveToJoinNodeList((TJoinNode) node);
+            } else if (node instanceof WaitNode) {
+              seq.stat.c_isync++;
+              NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
+            } else if (node instanceof NotifyNode) {
+              seq.stat.c_isync++;
+              NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
+            } else if (node instanceof NotifyAllNode) {
+              seq.stat.c_isync++;
+              NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
             }
-          
-            else if (node instanceof WaitNode) {
-              	 seq.stat.c_isync++;
-        	  	NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
           }
-          else if (node instanceof NotifyNode) {
-            	 seq.stat.c_isync++;
-
-        	  NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
-          }
-          else if (node instanceof NotifyAllNode) {
-            	 seq.stat.c_isync++;
-        	  NewReachEngine.saveToWaitNotifyList((IWaitNotifyNode) node);
-          }
+          bnext = br.read();
         }
-        bnext = br.read();
-    	  }
-      }catch(IOException e)
-    	  {
-    	  		e.printStackTrace();
-          //TODO: handle last thread node once error happens
-    	  		TEndNode node =  new TEndNode(tid,tid,0);//failed
-    	  		seq.numOfEvents++;
-            	node.gid = Bytes.longs.add(tid, seq.numOfEvents);
+      } catch (IOException e) {
+        e.printStackTrace();
+        //TODO: handle last thread node once error happens
+        TEndNode node = new TEndNode(tid, tid, 0);//failed
+        seq.numOfEvents++;
+        node.gid = Bytes.longs.add(tid, seq.numOfEvents);
 
-        		NewReachEngine.saveToThreadLastNode(tid, node);
+        NewReachEngine.saveToThreadLastNode(tid, node);
 
-    		        	  }
-      
-      
-      
+      }
       br.finish(fileInfo);
-//      LOG.debug(
-//          "File:{} finished loading, offset reset to {}",
-//          fileInfo.tid, fileInfo.fileOffset);
     } catch (Exception e) {
-//      throw new RuntimeException(e);
       LOG.error("error parsing trace " + tid, e);
       seq.events = null;
       return seq;

@@ -41,7 +41,6 @@ public class Session2 extends Session {
 	  printTraceStats();//JEFF
 	  
     sessionID = 0;
-    long _t1 = System.currentTimeMillis();
     uafID = 0;
 
     while (traceLoader.hasNext()) {
@@ -56,7 +55,7 @@ public class Session2 extends Session {
       
       HashMap<MemAccNode, HashSet<AllocaPair>> candidateUafLs = indexer.getMachtedAcc();
       
-      if(candidateUafLs.isEmpty())continue;
+     // if(candidateUafLs.isEmpty())continue;
       
       if (config.fast_detect)
       {

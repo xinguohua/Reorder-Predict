@@ -1,0 +1,5 @@
+548 -> 568
+TID,Start,Join,Alloc,Dealloc,Lock,Unlock,Cond Wait,Cond Signal,Cond BC,R1,R2,R4,R8,W1,W2,W4,W8,RW,RR,Stack ACC,Stack Range ACC,Func Call, Ptr PropTotal,size
+0,2,2,10,10,0,0,0,0,0,0,0,0,2,0,0,1,2,0,0,1,0,991,0,1020, 8445
+1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,0,8, 118
+2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,4,0,6, 66

@@ -99,13 +99,13 @@ public class Z3ModelReader {
 
   private static Z3Model process(Vector root) {
 
-    if (!root.elementAt(0).toString().equals("model"))
-      throw new IllegalStateException();
+//    if (!root.elementAt(0).toString().equals("model"))
+//      throw new IllegalStateException();
 
     Z3Model model = new Z3Model();
 
     int size = root.size();
-    for (int i = 1; i < size; i++)
+    for (int i = 0; i < size; i++)
       define_fun(root.elementAt(i), model);
 
     return model;

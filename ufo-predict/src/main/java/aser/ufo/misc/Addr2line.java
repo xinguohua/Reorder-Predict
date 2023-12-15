@@ -23,8 +23,9 @@ import config.Configuration;
  * addr2line util wrapper
  */
 public class Addr2line {
+  private static final String ADDR2LINE_LINUX1 = "addr2line --demangle=gnu -e ";//"atos -o ";//"addr2line --demangle=gnu -e ";
 
-  private static final String ADDR2LINE_LINUX = "addr2line --demangle=gnu -e ";//"atos -o ";//"addr2line --demangle=gnu -e ";
+  private static final String ADDR2LINE_LINUX = "addr2line -e ";//"atos -o ";//"addr2line --demangle=gnu -e ";
   private static final String ADDR2LINE_APPLE = "atos -o ";//"atos -o ";//"addr2line --demangle=gnu -e ";
   private static final String ADDR2LINE_LLVM = "llvm-symbolizer -color -pretty-print -obj=";//"atos -o ";//"addr2line --demangle=gnu -e ";
 
@@ -152,6 +153,9 @@ public static final int TRIM_LEN = 50;
       }
       else
       {
+         if (moduleName.equals("/ufo/test")){
+           moduleName = "/home/nsas2020/ufo/test";
+         }
     	  	cmd.append(ADDR2LINE).append(moduleName).append(' ');
     	  
 	      for (long offsetPC : offsetPCSeq) {

@@ -19,11 +19,7 @@ public class UFOMain {
 
     Configuration config = new Configuration(args);
     extendConfig(config);
-
-//    Session s = new Session(config);
     Session s = new Session2(config);
-//    Session s = new Session3(config);
-//    Session s = new ServerSession(config);
     s.init();
     s.start();
   }

@@ -232,11 +232,6 @@ public class EventLoader {
   public void populateIndexer(Indexer mIdx) {
     int tidCount = 0;
     final int ptLimit = windowSize;// / (aliveTids.size() * 6 + fileInfoMap.size() * 4 ) * 10;
-//    System.out.println(aliveTids.size() + "   " + fileInfoMap.size());
-
-    // load all known threads,
-    // if a thread is dead (not alive but still in the aliveTids), its file offset will be the cEnd and thus it won't be loaded
-    //LOG.debug(">>>>>>>>>>> alive:{},  ptLimit {}", aliveTids.size(),  ptLimit);
     ShortOpenHashSet newTids = addTLSeq(ptLimit, mIdx, aliveTids);
     tidCount += aliveTids.size();
 
@@ -254,13 +249,6 @@ public class EventLoader {
       newTids = nextTids;
     } // while
 
-//    // disable finished trace file
-//    for (FileInfo fi : fileInfoMap.values()) {
-//      if (fi.fileOffset >= fi.fsize - 7) {
-//        fi.enabled = false;
-//      }
-//    }
-
     // remove EOF trace file
     Iterator<Map.Entry<Short, FileInfo>> iter = fileInfoMap.entrySet().iterator();
     while (iter.hasNext()) {
@@ -273,21 +261,8 @@ public class EventLoader {
     }
 
     mIdx.metaInfo.tidCount = tidCount;
-    //JEFF
-    //1. set the number of threads
-    //2. assign index to each thread
-    
-    
-    
-//    if (tidCount < 2) {
-//      mIdx.metaInfo.sharedAddrs = EMPTY_LSET;
-//    }
-//    else
-      mIdx.postProcess();
-//    if (mIdx.metaInfo.tidRawNodesCounts.size() != tidCount)
-//      throw new RuntimeException(mIdx.metaInfo.tidRawNodesCounts.size() + "    " + tidCount);
 
-    //LOG.debug("Total events in indexer ({} threads): {}", tidCount, mIdx.getAllNodeSeq().size());
+    mIdx.postProcess();
   }
 
   public int getWindowSize() {

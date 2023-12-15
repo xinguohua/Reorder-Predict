@@ -103,29 +103,8 @@ public class Configuration {
 
     try {
 
-//      if (args.length == 0) {
-//        printUsageAndExit();
-//      }
-
-      //emp.Example stringbuffer.StringBufferTest
-
-      //String[] args2 = {"abc","-maxlen","10000","-noschedule","-nobranch"};
-
       // create Options object
       Options options = new Options();
-
-      // add t option
-//      options.addOption(opt_no_schedule, false, "not report schedule");
-//      options.addOption(opt_no_branch, false, "use no branch model");
-//      options.addOption(opt_no_volatile, false, "exclude volatile variables");
-//      options.addOption(opt_all_consistent, false, "require all read-write consistent");
-//      options.addOption(opt_rmm_pso, false, "PSO memory model");
-//      options.addOption(opt_smtlib1, false, "use constraint format smtlib v1.2");
-//      options.addOption(opt_optrace, false, "optimize race detection");
-//      options.addOption(opt_allrace, false, "check all races");
-//
-//      options.addOption(opt_constraint_outdir, false, "constraint file directory");
-//      options.addOption(opt_timeout, false, "rvpredict timeout in seconds");
 
       options.addOption(opt_solver_timeout, true, "solver timeout in seconds");
       options.addOption(opt_solver_memory, true, "solver memory fsize in MB");
@@ -181,13 +160,10 @@ public class Configuration {
 
       help = cmd.hasOption(opt_help);
 
-      if (help
-    		  //|| cmd.getArgList().isEmpty()
-    		  ) {
+      if (help) {
         printUsageAndExit();
       }
 
-//      binaryImage = cmd.getOptionValue(opt_image);
       traceDir = cmd.getOptionValue(opt_tdir);
 
       if (cmd.getArgList().size() > 0)

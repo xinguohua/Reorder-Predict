@@ -61,9 +61,7 @@ public class Session {
           / 0.7);
       LOG.info("Suggested window size {}", windowSize);
     } 
-//    else {
-//      LOG.info("window size {}", windowSize);
-//    }
+
     traceLoader.init(windowSize);
 
     try {
