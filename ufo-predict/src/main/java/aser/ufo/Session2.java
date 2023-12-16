@@ -46,7 +46,7 @@ public class Session2 extends Session {
     while (traceLoader.hasNext()) {
       sessionID++;
       Indexer indexer = new Indexer();
-      traceLoader.populateIndexer(indexer);
+      traceLoader.populateIndexer(indexer, this);
 
       loadedEventCount += indexer.metaInfo.rawNodeCount;
 

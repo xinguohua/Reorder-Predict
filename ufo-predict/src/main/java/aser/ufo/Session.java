@@ -92,7 +92,7 @@ public class Session {
     while (traceLoader.hasNext()) {
       sessionID++;
       Indexer indexer = new Indexer();
-      traceLoader.populateIndexer(indexer);
+      traceLoader.populateIndexer(indexer, this);
 
       int sac = indexer.metaInfo.sharedAddrs.size();
       if (sac < 1 && !LOAD_ONLY)
@@ -101,7 +101,6 @@ public class Session {
       if (cac < 1 && !LOAD_ONLY)
         continue;
 
-//      List<Pair<DeallocNode, MemAccNode>> candidateUafLs = findCandidateUafLs2(indexer);
       List<Pair<DeallocNode, MemAccNode>> candidateUafLs = findCandidateUafLs(indexer);
       if (candidateUafLs.isEmpty() && !LOAD_ONLY)
         continue;

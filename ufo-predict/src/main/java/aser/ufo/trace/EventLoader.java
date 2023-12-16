@@ -6,13 +6,17 @@ import aser.ufo.UFO;
 import aser.ufo.VectorClock;
 import aser.ufo.misc.CModuleSection;
 import aser.ufo.misc.CModuleList;
+import com.alibaba.fastjson.JSONObject;
+import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import trace.AbstractNode;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -192,7 +196,7 @@ public class EventLoader {
     }
   }
 
-  private ShortOpenHashSet addTLSeq(long limit, Indexer mIdx, ShortOpenHashSet tids) {
+  private ShortOpenHashSet addTLSeq(long limit, Indexer mIdx, ShortOpenHashSet tids, Session s) {
     ShortOpenHashSet newTids = new ShortOpenHashSet(3);
     for (short tid : tids) {
       FileInfo fi = fileInfoMap.get(tid);
@@ -210,7 +214,12 @@ public class EventLoader {
       //LOG.debug(seq.stat.toString());
       if (seq.events != null && seq.events.size() > 0) {
         mIdx.addTidSeq(seq.tid, seq.events);
-        //LOG.debug("{} events loaded from thread {}", seq.events.size(), seq.tid);
+        System.out.println("=========tid======" + seq.tid);
+        for (AbstractNode event : seq.events) {
+          ArrayList<AbstractNode> nodes2= new ArrayList<AbstractNode>();
+          nodes2.add(event);
+          System.out.println(JSONObject.toJSON(event) + "===" + event.getClass().getName()+ s.addr2line.sourceInfo(nodes2).values().toString());
+        }
       } else {
         fileInfoMap.remove(seq.tid);
       }
@@ -230,10 +239,10 @@ public class EventLoader {
     return newTids;
   }
 
-  public void populateIndexer(Indexer mIdx) {
+  public void populateIndexer(Indexer mIdx, Session s) {
     int tidCount = 0;
     final int ptLimit = windowSize;// / (aliveTids.size() * 6 + fileInfoMap.size() * 4 ) * 10;
-    ShortOpenHashSet newTids = addTLSeq(ptLimit, mIdx, aliveTids);
+    ShortOpenHashSet newTids = addTLSeq(ptLimit, mIdx, aliveTids, s);
     tidCount += aliveTids.size();
 
     newTids.removeAll(aliveTids);
@@ -242,7 +251,7 @@ public class EventLoader {
     // if found new, load
     while (newTids.size() > 0) {
       //LOG.debug(">>>>>>>>>>> trace limit {}, alive{}", windowSize, aliveTids.size());
-      ShortOpenHashSet nextTids = addTLSeq(ptLimit, mIdx, newTids);
+      ShortOpenHashSet nextTids = addTLSeq(ptLimit, mIdx, newTids, s);
       tidCount += newTids.size();
 
       nextTids.removeAll(aliveTids);
