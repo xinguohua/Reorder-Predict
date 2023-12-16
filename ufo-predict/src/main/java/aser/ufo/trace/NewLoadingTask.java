@@ -1,6 +1,8 @@
 package aser.ufo.trace;
 
+import aser.ufo.Session;
 import com.alibaba.fastjson.JSONObject;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,9 +13,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class NewLoadingTask implements Callable<TLEventSeq> {
 
@@ -26,11 +26,11 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
   }
 
   public TLEventSeq call() throws Exception {
-    return load();
+    return load(null);
   }
 
   //private long lastIdx;
-  public TLEventSeq load() {
+  public TLEventSeq load(Session s) {
     final short tid = fileInfo.tid;
     TLEventSeq seq = new TLEventSeq(tid);
     NewReachEngine.cur_order_index = 0;//reset order list
@@ -49,11 +49,11 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
       bnext = br.read();
 
       try {
-        System.out.println("TheadId=======tid" + JSONObject.toJSONString(tid));
+        System.out.println("##########TheadId#########Tid######" + tid + "############");
 
         while (bnext != -1) {
 
-          AbstractNode node = getNode(tid, bnext, br, seq.stat);
+          AbstractNode node = getNode(tid, bnext, br, s);
           seq.stat.c_total++;
           seq.numOfEvents++;
 
@@ -120,8 +120,8 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
   }
 
   private AbstractNode getNode(final short curTid,
-                                      final int typeIdx,
-                                      ByteReader breader, TLStat stat) throws IOException {
+                               final int typeIdx,
+                               ByteReader breader, Session s) throws IOException {
     short tidParent;
     short tidKid;
     long addr;
@@ -139,101 +139,89 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         tidParent = getShort(breader);
         pc = getLong48b(breader);
         eTime = getInt(breader);
-//                System.out.println("Begin " + tidParent + "  from " + _tidParent);
-//                node = new TStartNode(gidGen++, _tidParent, pc_id, "" + tidParent, AbstractNode.TYPE.START);
         long tmp = getLong48b(breader);
         tmp = getInt(breader);
         tmp = getLong48b(breader);
         tmp = getInt(breader);
         return new TBeginNode(curTid, tidParent, eTime);
-
       case 1: // cEnd
         tidParent = getShort(breader);
         eTime = getInt(breader);
-//                return new TJoinNode(_tidParent, pc_id, "" + tidParent, AbstractNode.TYPE.JOIN);
-//                System.out.println("End " + tidParent + "  to " + _tidParent);
         return new TEndNode(curTid, tidParent, eTime);
       case 2: // thread start
           long index = getLong48b(breader);
         tidKid = getShort(breader);
         eTime = getInt(breader);
         pc = getLong48b(breader);
-//                System.out.println("Start  " + _tidParent + "  ->  " + tidParent);
-//                println(s"#$_tidParent ---> #$tidParent")
-        stat.c_tstart++;
+        TLEventSeq.stat.c_tstart++;
         return new TStartNode(index,curTid, tidKid, eTime, pc);
       case 3: // join
-           index = getLong48b(breader);
-
+        index = getLong48b(breader);
         tidKid = getShort(breader);
         eTime = getInt(breader);
         pc = getLong48b(breader);
-//                System.out.println("Join  " + tidParent + "  <-  " + _tidParent);
-        stat.c_join++;
+        TLEventSeq.stat.c_join++;
         return new TJoinNode(index,curTid, tidKid, eTime, pc);
-//      * ThreadAcqLock,
-//  * ThreadRelLock = 5,
-//  * MemAlloc,
-//  * MemDealloc,
-//  * MemRead = 8,
-//  * MemWrite,
-//  * MemRangeRead = 10,
-//  * MemRangeWrite
       case 4: // lock  8 + (13 + 48 -> 64) -> 72
         //long index = getLong48b(breader);
         addr = getLong48b(breader);
         pc = getLong48b(breader);
-//                System.out.println("#" + _tid + " lock  " + addr);
-        stat.c_lock++;
+        TLEventSeq.stat.c_lock++;
         //lastIdx = index;
-//	public LockNode(short tid, long lockID, long pc, long idx) {
+        System.out.println("threadId"+ curTid + "lock");
         return null;//JEFF
       case 5: // nUnlock
         addr = getLong48b(breader);
         pc = getLong48b(breader);
-//                System.out.println("#" + _tid + " nUnlock  " + addr);
-        stat.c_unlock++;
+        TLEventSeq.stat.c_unlock++;
+        System.out.println("threadId"+ curTid + "c_unlock");
         return null;//JEFF
       case 6: // alloc
 //        index = getLong48b(breader);
         addr = getLong48b(breader);
         pc = getLong48b(breader);
         size = getInt(breader);
-//        System.out.println("allocate #" + _tid + " " + fsize + "  from " + addr);
-        stat.c_alloc++;
-       // lastIdx = index;
+        TLEventSeq.stat.c_alloc++;
+        ArrayList<AbstractNode> nodes= new ArrayList<AbstractNode>();
+        nodes.add(new AllocNode(curTid, pc, addr, size));
+        //System.out.println("threadId"+ curTid + "alloc"+ "==="+   s.addr2line.sourceInfo(nodes).values().toString());
+
+        // lastIdx = index;
         return null;//JEFF
       case 7: // dealloc
 //        index = getLong48b(breader);
         addr = getLong48b(breader);
         pc = getLong48b(breader);
         size = getInt(breader);
-//        System.out.println("deallocate #" + _tid + "  from " + addr);
-        stat.c_dealloc++;
+        TLEventSeq.stat.c_dealloc++;
         //lastIdx = index;
+        ArrayList<AbstractNode> nodes1= new ArrayList<AbstractNode>();
+        nodes1.add(new DeallocNode(curTid, pc, addr, size));
+        //System.out.println("threadId"+ curTid + "c_dealloc"+ "==="+   s.addr2line.sourceInfo(nodes1).values().toString());
         return null;//JEFF
       case 10: // range r
 //        index = getLong48b(breader);
         addr = getLong48b(breader);
         pc = getLong48b(breader);
         size = getInt(breader);
-        stat.c_range_r++;
+        TLEventSeq.stat.c_range_r++;
         //lastIdx = index;
+        ArrayList<AbstractNode> nodes2= new ArrayList<AbstractNode>();
+        nodes2.add(new RangeReadNode(curTid, pc, addr, size));
+        System.out.println("threadId"+ curTid + "=====RRRR" + "=======" + s.addr2line.sourceInfo(nodes2).values().toString());
         return null;//JEFF
-//                System.out.println("#" + _tid + " read range " + fsize + "  from " + addr);
       case 11: // range w
 //        index = getLong48b(breader);
         addr = getLong48b(breader);
         pc = getLong48b(breader);
         size = getInt(breader);
-        //lastIdx = index;
-//                System.out.println("#" + _tid + " read write " + fsize + "  from " + addr);
-        stat.c_range_w++;
+        TLEventSeq.stat.c_range_w++;
+        System.out.println("threadId"+ curTid + "write");
         return null;//JEFF
       case 12: // PtrAssignment
         long src = getLong48b(breader);
         long dest = getLong48b(breader);
-//        System.out.println(">>> prop " + Long.toHexString(dest) + "   <= " + Long.toHexString(src));
+        System.out.println("threadId"+ curTid + "PtrAssignment");
         //long idx = lastIdx;
         //lastIdx = 0;
 //  public PtrPropNode(short tid, long src, long dest, long idx) {
@@ -244,36 +232,46 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         time = getLong64b(breader);
         len = getLong64b(breader);
 //        LOG.debug(">>> UFO packet:{}  time: {} len: {} ", new Date(time), len);
+        System.out.println("threadId"+ curTid + "InfoPacket");
         return null;
       case 15: //Func Entry
         pc = getLong48b(breader);
         //FuncEntryNode funcEntryNode = new FuncEntryNode(curTid, pc);
         //JEFF
         //LOG.debug(funcEntryNode.toString());
+        FuncEntryNode funcEntryNode = new FuncEntryNode(curTid, pc);
+        ArrayList<AbstractNode> nodes5= new ArrayList<AbstractNode>();
+        nodes5.add(funcEntryNode);
+        LongArrayList pcLs = new LongArrayList(nodes5.size());
+        pcLs.add(funcEntryNode.pc);
+        //System.out.println("threadId"+ curTid + "=====Func Entry" + "=======" + s.addr2line.sourceInfo(pcLs).values().toString());
         return null;//JEFF
       case 16: //Func Exit
-          return null;//JEFF
+        //System.out.println("threadId"+ curTid + "Func Exit");
+
+        return null;//JEFF
       case 17: // ThrCondWait
          index = getLong48b(breader);
     	  	long   cond = getLong48b(breader);
     	  	long  mutex = getLong48b(breader);
         pc = getLong48b(breader);
-        stat.c_wait++;
+        TLEventSeq.stat.c_wait++;
     	    return new WaitNode(index,curTid,cond,mutex,pc); 
       case 18: // ThrCondSignal
     	  	index = getLong48b(breader);
     	  	cond = getLong48b(breader);
              pc = getLong48b(breader);
-             stat.c_notify++;
+             TLEventSeq.stat.c_notify++;
        	    return new NotifyNode(index,curTid,cond,pc); 
       case 19: // ThrCondBroadCast
     	  index = getLong48b(breader);
     	  cond = getLong48b(breader);
          pc = getLong48b(breader);
-         stat.c_notifyAll++;
+         TLEventSeq.stat.c_notifyAll++;
    	    return new NotifyAllNode(index,curTid,cond,pc); 
       case 20: // de-ref
         long ptrAddr = getLong48b(breader);
+        System.out.println("threadId"+ curTid + "de-ref");
 //        System.out.println(">>> deref " + Long.toHexString(ptrAddr));
         return null;
       default: // 8 + (13 + 48 -> 64) -> 72 + header (1, 2, 4, 8)
@@ -281,29 +279,30 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         if (type_idx <= 13) {
           size = 1 << (typeIdx >> 6);
           MemAccNode accN = null;
+          boolean readFlag = false;
           if (type_idx == 8)
           {
-
-            accN = getRWNode(size, false, curTid, breader, stat);
+            readFlag = true;
+            accN = getRWNode(size, false, curTid, breader);
           }
           else if (type_idx == 9)
           {
-            accN = getRWNode(size, true, curTid, breader, stat);
+            accN = getRWNode(size, true, curTid, breader);
           }
+          ArrayList<AbstractNode> nodes4= new ArrayList<AbstractNode>();
+          nodes4.add(accN);
+          System.out.println("threadId"+ curTid + "=====" + (readFlag? "R" : "W") +"=======" + s.addr2line.sourceInfo(nodes4).values().toString());
           //lastIdx = accN.idx;
           return null;//JEFF
         }
-        //JEFF may be it is corrupted
-//        System.err.println("Unrecognized trace, type index " + typeIdx + " m " + type_idx);
         return null;
-//        throw new IOException("Unrecognized trace, tid #"+curTid+" type index " + typeIdx + " m " + type_idx);
     }
   }
 
   private static MemAccNode getRWNode(int size,
                                       boolean isW,
                                       short curTid,
-                                      ByteReader breader, TLStat stat) throws IOException {
+                                      ByteReader breader) throws IOException {
 
     ByteBuffer valueBuf = ByteBuffer.wrap(new byte[8]).order(ByteOrder.LITTLE_ENDIAN);
 //    long index = getLong48b(breader);
@@ -316,9 +315,9 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
       valueBuf.put((byte) v);
       sz++;
     }
-    long[] st = stat.c_read;
+    long[] st = TLEventSeq.stat.c_read;
     if (isW)
-      st = stat.c_write;
+      st = TLEventSeq.stat.c_write;
     Number obj = null;
     switch (size) {
       case 1:
@@ -339,7 +338,11 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         break;
     }
     valueBuf.clear();
-    return null;//JEFF
+    if (isW) {
+      return new WriteNode(curTid, pc, addr, (byte) size, obj.longValue());
+    } else { // type_idx 9
+      return new ReadNode(curTid, pc, addr, (byte) size, obj.longValue());
+    }
   }
 
   public static short getShort(ByteReader breader) throws IOException {

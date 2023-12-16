@@ -1,6 +1,6 @@
-/ufo/datarace|0|4ea000|
-/ufo/datarace|600000|0|
-/ufo/datarace|600000|0|
+/home/nsas2020/ufo/ufo-predict/datarace|0|4ea000|
+/home/nsas2020/ufo/ufo-predict/datarace|600000|0|
+/home/nsas2020/ufo/ufo-predict/datarace|600000|0|
 /tmp/tsan.rodata.568 (deleted)|dc587608000|0|
 /tmp/tsan.rodata.568 (deleted)|dc587688000|0|
 /tmp/tsan.rodata.568 (deleted)|dc587708000|0|

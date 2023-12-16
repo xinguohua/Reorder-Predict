@@ -1,6 +1,7 @@
 package aser.ufo.trace;
 
 import aser.ufo.NewReachEngine;
+import aser.ufo.Session;
 import aser.ufo.UFO;
 import aser.ufo.VectorClock;
 import aser.ufo.misc.CModuleSection;
@@ -279,13 +280,13 @@ public CModuleList getModuleList() {
     return moduleList;
   }
 
-public void preprocessWaitNotify() {
+public void preprocessWaitNotify(Session s) {
 	ShortOpenHashSet aliveTids_ = new ShortOpenHashSet(80);
 		  for (short tid : allThreads) {
 		      FileInfo fi = fileInfoMap.get(tid);
 		      if (fi!=null)
 		      {
-		    	  	TLEventSeq seq = new NewLoadingTask(fi).load();
+		    	  	TLEventSeq seq = new NewLoadingTask(fi).load(s);
 		    	  	
 		    	  	
 		    	  	LOG.info("tid: "+ tid + " Total Events:  "+ seq.numOfEvents);
