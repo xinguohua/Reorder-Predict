@@ -54,7 +54,7 @@ public class NewLoadingTask implements Callable<TLEventSeq> {
         while (bnext != -1) {
 
           AbstractNode node = getNode(tid, bnext, br, s);
-          seq.stat.c_total++;
+          TLEventSeq.stat.c_total++;
           seq.numOfEvents++;
 
           if (node != null) {
