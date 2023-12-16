@@ -154,8 +154,6 @@ public class Indexer {
       // check reachability engine
       
       allocator.matchInterThrDealloc(reachEngine);
-      
-      //System.out.println("postProcess");
 
       // 2. second pass:
       LongOpenHashSet sharedAddrSet = findSharedAcc();
