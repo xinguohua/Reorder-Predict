@@ -259,7 +259,6 @@ public class Indexer {
       Long2ObjectOpenHashMap<ShortOpenHashSet> addr2TidReads = new Long2ObjectOpenHashMap<ShortOpenHashSet>(UFO.INITSZ_S);
       Long2ObjectOpenHashMap<ShortOpenHashSet> addr2TidWrites = new Long2ObjectOpenHashMap<ShortOpenHashSet>(UFO.INITSZ_S);
       LongOpenHashSet sharedAddrSet = new LongOpenHashSet(UFO.INITSZ_L * 2);
-//    sharedAddrSet.addAll(_allocationTree.keySet());
 
       for (Short2ObjectOpenHashMap.Entry<ArrayList<AbstractNode>> e : _rawTid2seq.short2ObjectEntrySet()) {
         final short tid = e.getShortKey();

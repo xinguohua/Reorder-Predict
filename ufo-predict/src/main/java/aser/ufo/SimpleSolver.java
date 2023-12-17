@@ -431,7 +431,7 @@ public class SimpleSolver implements UfoSolver {
     synchronized (ct_constr) {
       ct_constr.push(UFO.countMatches(csb, "assert"));
     }
-
+    System.out.println("final csb=========\n" + csb  + "\n=========\n");
     if (!doSolve)
       return null;
 
