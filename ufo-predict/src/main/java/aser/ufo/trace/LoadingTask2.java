@@ -59,35 +59,28 @@ public class LoadingTask2 implements Callable<TLEventSeq> {
       }
       bnext = br.read();
       int eCount = 0;
-      
+
       try {
       while (bnext != -1 && eCount < eLimit) {
         AbstractNode node = getNode(tid, bnext, br, seq.stat);
-        
+
         if (node != null) {
-        	
+
             seq.numOfEvents++;
 
         		node.gid = Bytes.longs.add(tid, seq.numOfEvents);//check consistency
-          
+
                 if (node instanceof TStartNode)
                     seq.newTids.add(((TStartNode)node).tidKid);
-                
-          //DEBUG
-        		if(node instanceof ISyncNode)
-        		{
-        			//LOG.debug(node.toString());//JEFF
-        			//skip isync node??
-        		}
-        		else
-        		{
-	          seq.events.add(node);
-	
-	          if (node instanceof MemAccNode) {
-	            lastMemAcc = (MemAccNode) node;
-	          }
-	          eCount++;
-        		}
+
+
+          seq.events.add(node);
+
+          if (node instanceof MemAccNode) {
+            lastMemAcc = (MemAccNode) node;
+          }
+          eCount++;
+
         }
         bnext = br.read();
       }
@@ -98,7 +91,7 @@ public class LoadingTask2 implements Callable<TLEventSeq> {
 	  		TEndNode node =  new TEndNode(tid,tid,0);//failed
 	  		seq.numOfEvents++;
         	node.gid = Bytes.longs.add(tid, seq.numOfEvents);
-        	
+
             //LOG.debug(node.toString());//JEFF
 
 	  }
@@ -267,17 +260,17 @@ public class LoadingTask2 implements Callable<TLEventSeq> {
     	  	long   cond = getLong48b(breader);
     	  	long  mutex = getLong48b(breader);
         pc = getLong48b(breader);
-    	    return new WaitNode(index,curTid,cond,mutex,pc); 
+    	    return new WaitNode(index,curTid,cond,mutex,pc);
       case 18: // ThrCondSignal
     	  	index = getLong48b(breader);
     	  	cond = getLong48b(breader);
              pc = getLong48b(breader);
-       	    return new NotifyNode(index,curTid,cond,pc); 
+       	    return new NotifyNode(index,curTid,cond,pc);
       case 19: // ThrCondBroadCast
     	  index = getLong48b(breader);
     	  cond = getLong48b(breader);
          pc = getLong48b(breader);
-   	    return new NotifyAllNode(index,curTid,cond,pc); 
+   	    return new NotifyAllNode(index,curTid,cond,pc);
       case 20: // de-ref
         long ptrAddr = getLong48b(breader);
 //        System.out.println(">>> deref " + Long.toHexString(ptrAddr));

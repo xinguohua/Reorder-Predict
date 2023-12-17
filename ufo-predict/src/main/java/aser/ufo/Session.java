@@ -151,8 +151,6 @@ public class Session {
     solver.buildSyncConstr(indexer);
     // tid: a1 < a2 < a3
     solver.buildIntraThrConstr(indexer.getTSTid2sqeNodes());
-    
-//    indexer.prepareNorm(); // early release index, give memory to z3
   }
 
 

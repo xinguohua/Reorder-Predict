@@ -53,7 +53,7 @@ public class SimpleSolver implements UfoSolver {
       ct_vals++;
     }
     constrDeclare = sb.toString();
-    reachEngine = new NewReachEngine();
+    System.out.println("declareVariables====\n" + constrDeclare);
   }
 
   @Override
@@ -75,6 +75,7 @@ public class SimpleSolver implements UfoSolver {
       }
     }
     constrMHB = sb.toString();
+    System.out.println("constrMHB======\n"+constrMHB);
   }
 
 
@@ -86,8 +87,8 @@ public class SimpleSolver implements UfoSolver {
   public void buildSyncConstr(Indexer index) {
     StringBuilder sb = new StringBuilder(UFO.INITSZ_S * 10);
 
-    Short2ObjectOpenHashMap<AbstractNode> firstNodes = index.getTidFirstNode();
-    Short2ObjectOpenHashMap<AbstractNode> lastNodes = index.getTidLastNode();
+    Short2ObjectOpenHashMap<AbstractNode> firstNodes = NewReachEngine.tidFirstNode;
+    Short2ObjectOpenHashMap<AbstractNode> lastNodes = NewReachEngine.tidLastNode;
 
     ArrayList<TStartNode> thrStartNodeList = NewReachEngine.thrStartNodeList;
     for (TStartNode node : thrStartNodeList) {
@@ -105,7 +106,6 @@ public class SimpleSolver implements UfoSolver {
         sb.append("(assert (< ").append(makeVariable(lnode.gid)).append(' ').append(makeVariable(node.gid)).append(" ))\n");
       }
     }
-
 
     Long2ObjectOpenHashMap<ArrayList<LockPair>> addr2LpLs = index.getAddr2LockPairLs();
     StringBuilder constr = new StringBuilder(256);
@@ -134,8 +134,8 @@ public class SimpleSolver implements UfoSolver {
               || p2LK.tid == p1LKTid)
             continue;
 
-          if (reachEngine.canReach(p1LK, p2LK)
-              || reachEngine.canReach(p2LK, p1LK))
+          if (NewReachEngine.canReach(p1LK, p2LK)
+              || NewReachEngine.canReach(p2LK, p1LK))
             continue;
           // parallel lock pairs
 
@@ -165,6 +165,7 @@ public class SimpleSolver implements UfoSolver {
     } // for one lock
 
     constrSync = sb.toString();
+    System.out.println("constrSync====\n" + constrSync);
   }
 
 

@@ -69,14 +69,12 @@ public static void saveToWaitNotifyList(IWaitNotifyNode node) {
 public static void saveToStartNodeList(TStartNode node)
 {
 	addToOrderedSyncList(node);
-	
-    //thrStartNodeList.add(node);
+	thrStartNodeList.add(node);
 }
 public static void saveToJoinNodeList( TJoinNode node)
 {
 	addToOrderedSyncList(node);
-
-    //joinNodeList.add(node);
+	joinNodeList.add(node);
 }
 public static void saveToThreadFirstNode(short tid, TBeginNode node)
 {
