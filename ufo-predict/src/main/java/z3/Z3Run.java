@@ -37,6 +37,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Map.Entry;
 
+import com.alibaba.fastjson.JSONObject;
 import config.Configuration;
 import aser.ufo.UFO;
 import it.unimi.dsi.fastutil.ints.Int2IntRBTreeMap;
@@ -116,7 +117,7 @@ protected static String Z3_SMT2 = ".z3smt2";
       model = Z3ModelReader.read(z3OutFile);
 
       if (model != null) {
-    	  	
+        System.out.println(JSONObject.toJSONString(model.vals));
     	  	//We can skip schedule construction if we don't need it
     	  	if(config.schedule)
     	  		schedule = computeSchedule2(model);

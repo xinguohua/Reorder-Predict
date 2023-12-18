@@ -1,6 +1,7 @@
 package aser.ufo;
 
 import aser.ufo.misc.Pair;
+import aser.ufo.misc.RacePair;
 import aser.ufo.trace.AllocaPair;
 import aser.ufo.trace.Indexer;
 import config.Configuration;
@@ -31,9 +32,11 @@ public class SimpleSolver implements UfoSolver {
 
   // constraints below
   protected String constrDeclare;
+  protected String valueUniQ;
   protected String constrMHB;
   protected String constrSync;
   protected String constrCasual="";
+  protected String reorder="";
 
   public static final String CONS_SETLOGIC = "(set-logic QF_IDL)\n";// use integer difference logic
   public static final String CONS_CHECK_GETMODEL =  "(check-sat)\n(get-model)\n(exit)";
@@ -57,6 +60,24 @@ public class SimpleSolver implements UfoSolver {
   }
 
   @Override
+  public void assertAllVariablesDistinct(ArrayList<AbstractNode> trace) {
+    StringBuilder sb = new StringBuilder();
+    int n = trace.size();
+
+    // 生成所有不等式断言
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        String var1 = makeVariable(trace.get(i).gid);
+        String var2 = makeVariable(trace.get(j).gid);
+        sb.append("(assert (not (= ").append(var1).append(" ").append(var2).append(")))\n");
+      }
+    }
+
+    valueUniQ = sb.toString();
+    //System.out.println("assertAllVariablesDistinct====\n" + valueUniQ);
+  }
+
+  @Override
   public void buildIntraThrConstr(Short2ObjectOpenHashMap<ArrayList<AbstractNode>> map) {
     StringBuilder sb = new StringBuilder(UFO.INITSZ_L * 10);
     for (ArrayList<AbstractNode> nodes : map.values()) {
@@ -75,7 +96,6 @@ public class SimpleSolver implements UfoSolver {
       }
     }
     constrMHB = sb.toString();
-    System.out.println("constrMHB======\n"+constrMHB);
   }
 
 
@@ -440,6 +460,78 @@ public class SimpleSolver implements UfoSolver {
     return ls;
   }
 
+  public LongArrayList searchReorderSchedule(RacePair racePair) {
+
+    boolean doSolve = true;
+
+    MemAccNode accNode1 = racePair.getNoPair().key;
+    MemAccNode accNode2 = racePair.getNoPair().value;
+
+    //only make sure those reads that
+    //accNode and deNode depend on are consistent
+
+    ArrayList<ReadNode> allReadNodes = new ArrayList<ReadNode>();
+
+    currentIndexer.getTSDependentSeqRead(allReadNodes, accNode1);
+    currentIndexer.getTSDependentSeqRead(allReadNodes, accNode2);
+
+    buildCausalConstrOpt(allReadNodes);
+
+    // 1、 无依赖出 重排 reorder constr
+    String varAcc1 = makeVariable(accNode1.gid);
+    String varAcc2 = makeVariable(accNode2.gid);
+    constrMHB = removeSpecificLines(constrMHB, varAcc1, varAcc2);
+    reorder = "(assert (< " + varAcc2 + " " + varAcc1 + " ))\n";
+
+    // 2、依赖后到达一个新的状态  26 flag != 1
+    MemAccNode abbNode1 = racePair.getFirstRacePair().key;
+    MemAccNode abbNode2 = racePair.getFirstRacePair().value;
+    String varAcc3 = makeVariable(abbNode1.gid);
+    String varAcc4 = makeVariable(abbNode2.gid);
+    String depStr = "";
+    if (abbNode1.gid < abbNode2.gid){
+      depStr = "(assert (< " + varAcc4 + " " + varAcc3 + " ))\n";
+    }else {
+      depStr= "(assert (< " + varAcc3 + " " + varAcc4 + " ))\n";
+    }
+
+    // 控制因子 顺序保持不变
+    MemAccNode addNode1 = racePair.getSecondRacePair().key;
+    MemAccNode addNode2 = racePair.getSecondRacePair().value;
+    String varAcc5 = makeVariable(addNode1.gid);
+    String varAcc6 = makeVariable(addNode2.gid);
+    String conStr = "";
+
+    if (accNode1.gid < abbNode2.gid){
+      conStr = "(assert (< " + varAcc5 + " " + varAcc6 + " ))\n";
+    }else {
+      conStr = "(assert (< " + varAcc6 + " " + varAcc5 + " ))\n";
+    }
+
+    String csb = CONS_SETLOGIC + constrDeclare + constrMHB + constrSync + constrCasual + valueUniQ
+            + reorder
+            + depStr
+            + conStr
+    + CONS_CHECK_GETMODEL;
+
+
+    synchronized (ct_constr) {
+      ct_constr.push(UFO.countMatches(csb, "assert"));
+    }
+    System.out.println("constrMHB======\n"+constrMHB);
+    System.out.println("reorder======\n"+reorder);
+    System.out.println("depStr======\n" + depStr);
+    System.out.println("conStr======\n" + conStr);
+
+
+    //System.out.println("order===final csb=========\n" + csb  + "\n=========\n");
+    if (!doSolve)
+      return null;
+
+    Z3Run task = new Z3Run(config, taskId.getAndIncrement());
+    LongArrayList ls =  task.buildSchedule(csb);
+    return ls;
+  }
 
   public boolean mustUaF(MemAccNode accNode, HashSet<AllocaPair> pairs) {
     return mustUaF(true, accNode, pairs);
@@ -488,5 +580,17 @@ public class SimpleSolver implements UfoSolver {
     this.constrCasual = null;
     this.taskId.set(0);
     this.reachEngine = null;
+  }
+
+
+  public String removeSpecificLines(String input, String varAcc1, String varAcc2) {
+    StringBuilder output = new StringBuilder();
+    String[] lines = input.split("\n"); // 分割字符串为行
+    for (String line : lines) {
+      if (!(line.contains(varAcc1) && line.contains(varAcc2))) {
+        output.append(line).append("\n"); // 如果行不是要删除的行，则添加到输出中
+      }
+    }
+    return output.toString();
   }
 }

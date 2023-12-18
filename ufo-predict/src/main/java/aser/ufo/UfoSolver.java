@@ -1,6 +1,7 @@
 package aser.ufo;
 
 import aser.ufo.misc.Pair;
+import aser.ufo.misc.RacePair;
 import aser.ufo.trace.Indexer;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -17,7 +18,9 @@ import java.util.ArrayList;
  */
 public interface UfoSolver {
 
-	LongArrayList searchUafSchedule(Pair<DeallocNode, MemAccNode> p);
+  LongArrayList searchUafSchedule(Pair<DeallocNode, MemAccNode> p);
+
+  LongArrayList searchReorderSchedule(RacePair racePair);
 
   void buildIntraThrConstr(Short2ObjectOpenHashMap<ArrayList<AbstractNode>> map);
 
@@ -27,6 +30,8 @@ public interface UfoSolver {
   void buildSyncConstr(Indexer index);
 
   void declareVariables(ArrayList<AbstractNode> trace);
+
+  void assertAllVariablesDistinct(ArrayList<AbstractNode> trace);
 
   boolean canReach(AbstractNode node1, AbstractNode node2);
 

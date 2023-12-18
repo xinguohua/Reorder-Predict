@@ -147,10 +147,14 @@ public class Session {
     solver.setReachEngine(indexer.getReachEngine());
 
     solver.declareVariables(indexer.getAllNodeSeq());
+    // 顺序唯一
+    solver.assertAllVariablesDistinct(indexer.getAllNodeSeq());
+
     // start < tid_first
     solver.buildSyncConstr(indexer);
     // tid: a1 < a2 < a3
     solver.buildIntraThrConstr(indexer.getTSTid2sqeNodes());
+
   }
 
 

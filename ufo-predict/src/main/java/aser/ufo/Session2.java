@@ -1,16 +1,16 @@
 package aser.ufo;
 
-import aser.ufo.misc.Pair;
-import aser.ufo.misc.RawUaFCpx;
-import aser.ufo.misc.RawUaf;
+import aser.ufo.misc.*;
 import aser.ufo.trace.AllocaPair;
 import aser.ufo.trace.FileInfo;
 import aser.ufo.trace.Indexer;
 import aser.ufo.trace.LoadingTask2;
 import aser.ufo.trace.TLEventSeq;
+import com.google.common.collect.Lists;
 import config.Configuration;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import trace.AbstractNode;
 import trace.DeallocNode;
 import trace.MemAccNode;
 
@@ -112,6 +112,30 @@ public class Session2 extends Session {
             outputUafLs(ls, indexer);
         }
 
+
+        List<RacePair> pairList = Lists.newArrayList();
+        RacePair racePair = new RacePair();
+        pairList.add(racePair);
+        // 0 不存在依赖的一对 // 1存在依赖的一对
+        for (AbstractNode node : indexer.getAllNodeSeq()) {
+          if (node.gid == 4294967303L) {
+            racePair.setFirstRaceAccNode1((MemAccNode) node);
+          }
+          if (node.gid == 4294967304L) {
+            racePair.setSecondRaceAccNode2((MemAccNode) node);
+          }
+          if (node.gid == 8589934595L) {
+            racePair.setSecondRaceAccNode1((MemAccNode) node);
+          }
+          if (node.gid == 8589934596L) {
+            racePair.setFirstRaceAccNode2((MemAccNode) node);
+          }
+        }
+          List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
+          if (result != null && result.size() > 0) {
+
+          }
+
         if (solver.ct_constr.size() > 0) {
           ct_vals.push(solver.ct_vals);
           Pair<Integer, Long> max_total = _Max_total(solver.ct_constr);
@@ -119,8 +143,6 @@ public class Session2 extends Session {
           if (max_total.value > Integer.MAX_VALUE)
             throw new RuntimeException("Overflow long -> int " + max_total.value);
           ct_max_constr.push(max_total.key);
-//        int avg = _Max_total.value / solver.ct_constr.size();
-//        ct_constr_max_avg.add(new Pair<Integer, Integer>(_Max_total.key, avg));
         }
         solver.reset(); // release constraints for this round
         writerD.append("\r\n");
@@ -128,8 +150,6 @@ public class Session2 extends Session {
 
 
     }
-//    System.out.println(__c1 + "   " + __c2 + "   " + __c3);
-//    System.out.println(config.window_size +  "  Time:  " + ((System.currentTimeMillis() - _t1) / 1000));
     _PrintStat();
     exe.shutdown();
     try {
@@ -354,5 +374,20 @@ public void printTraceStats() {
     return ls;
   }
 
+  public List<RawOrder> solveOrderConstr(List<RacePair> pairList, int limit) {
+    Iterator<RacePair> iter = pairList.iterator();
+    ArrayList<RawOrder> ls = new ArrayList<RawOrder>();
 
+
+    while (iter.hasNext() && limit > 0) {
+      limit--;
+      LongArrayList bugSchedule = null;
+      RacePair e = iter.next();
+      bugSchedule = solver.searchReorderSchedule(e);
+      if (bugSchedule != null){
+        ls.add(new RawOrder(e, bugSchedule));
+      }
+    }
+    return ls;
+  }
 }
