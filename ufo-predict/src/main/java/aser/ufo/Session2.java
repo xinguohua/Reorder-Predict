@@ -78,7 +78,7 @@ public class Session2 extends Session {
                 }
             }
 
-            //===================process handle=============================
+            //===================process handle constr solve=============================
             if ("UAF".equals(config.model)) {
                 writerD.append("#").append(String.valueOf(sessionID)).append(" Session").append("   candidateUafLs: ").append(String.valueOf(candidateUafLs.size())).append('\n');
                 // UAF
