@@ -118,7 +118,12 @@ protected static String Z3_SMT2 = ".z3smt2";
 
       if (model != null) {
         System.out.println(JSONObject.toJSONString(model.vals));
-    	  	//We can skip schedule construction if we don't need it
+        System.out.println("x4294967303=" + model.vals.get("x4294967303"));
+        System.out.println("x4294967304=" + model.vals.get("x4294967304"));
+        System.out.println("x8589934595=" + model.vals.get("x8589934595"));
+        System.out.println("x8589934596=" + model.vals.get("x8589934596"));
+
+        //We can skip schedule construction if we don't need it
     	  	if(config.schedule)
     	  		schedule = computeSchedule2(model);
     	  	else

@@ -37,6 +37,8 @@ public class SimpleSolver implements UfoSolver {
   protected String constrSync;
   protected String constrCasual="";
   protected String reorder="";
+  protected String depStr = "";
+  protected String conStr = "";
 
   public static final String CONS_SETLOGIC = "(set-logic QF_IDL)\n";// use integer difference logic
   public static final String CONS_CHECK_GETMODEL =  "(check-sat)\n(get-model)\n(exit)";
@@ -488,7 +490,7 @@ public class SimpleSolver implements UfoSolver {
     MemAccNode abbNode2 = racePair.getFirstRacePair().value;
     String varAcc3 = makeVariable(abbNode1.gid);
     String varAcc4 = makeVariable(abbNode2.gid);
-    String depStr = "";
+
     if (abbNode1.gid < abbNode2.gid){
       depStr = "(assert (< " + varAcc4 + " " + varAcc3 + " ))\n";
     }else {
@@ -496,11 +498,11 @@ public class SimpleSolver implements UfoSolver {
     }
 
     // 控制因子 顺序保持不变
-    MemAccNode addNode1 = racePair.getSecondRacePair().key;
-    MemAccNode addNode2 = racePair.getSecondRacePair().value;
+    MemAccNode addNode1 = racePair.getSecondRaceAccNode2();
+    MemAccNode addNode2 = racePair.getSecondRaceAccNode1();
     String varAcc5 = makeVariable(addNode1.gid);
     String varAcc6 = makeVariable(addNode2.gid);
-    String conStr = "";
+
 
     if (accNode1.gid < abbNode2.gid){
       conStr = "(assert (< " + varAcc5 + " " + varAcc6 + " ))\n";
@@ -522,6 +524,7 @@ public class SimpleSolver implements UfoSolver {
     System.out.println("reorder======\n"+reorder);
     System.out.println("depStr======\n" + depStr);
     System.out.println("conStr======\n" + conStr);
+    //System.out.println("invalid====\n" + valueUniQ);
 
 
     //System.out.println("order===final csb=========\n" + csb  + "\n=========\n");
