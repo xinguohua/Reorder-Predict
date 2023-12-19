@@ -79,6 +79,7 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
     g.deallocNode = deallocNode;
     q.add(g);
 }
+
   public void insert(DeallocNode deallocNode) {
     count_dealloc++;
     short tid = deallocNode.tid;
@@ -95,14 +96,13 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
           } else if (Indexer.CHECK_MEM_ERROR) {
             LOG.error("possible double free at {}, first free {}, second free {}", g.allocNode, g.allocNode, deallocNode);
             unmatched.add(deallocNode);
-//            __df_nodes.add(deallocNode);
           }
           return;
         }
       }
     }
     //if we get here, probably the alloc is in a previous window or it is missed
-    	
+
     unmatched.add(deallocNode);
   }
 
