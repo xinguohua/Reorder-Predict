@@ -107,19 +107,12 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
   }
 
   public void matchInterThrDealloc(NewReachEngine reachEngine) {
-	  
-	  if(unmatched.size()>0)
-	  {//JEFF
-		  //if we get here, INTERESTING things begin
-	  
-    if (count_alloc != count_dealloc) {
-      //LOG.error("Alloc({}) != Dealloc({})", count_alloc, count_dealloc);
+    if (unmatched.isEmpty()) {
+      return;
     }
-//    System.err.printf("Alloc(%d) != Dealloc(%d)\r\n", count_alloc, count_dealloc);
-//    System.out.println(">>> matchInterThrDealloc before unmatched " + unmatched.size() + "    matched: " + _matchedAlloc());
+
     HashSet<AllocaPair> possibleMatchSet = new HashSet<AllocaPair>(100);
     HashSet<DeallocNode> matchedDelloc = new HashSet<DeallocNode>(60);
-
 
     for (DeallocNode deNode : unmatched) {
       final long addr = deNode.addr;
@@ -132,11 +125,11 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
         g.deallocNode = deNode;
         // WARNING: if alloc is from previous window, this can be wrong!
         matchedDelloc.add(deNode);
-      } else if (possibleMatchSet.isEmpty()){
+      } else if (possibleMatchSet.isEmpty()) {
         //LOG.debug("No match for dealloc {} , possible alloc", deNode);
-    	  
-    	  //JEFF: create a fake alloc node pair
-    	  addNewAllocaPairWithFakeAlloc(tid,deNode);
+
+        //JEFF: create a fake alloc node pair
+        addNewAllocaPairWithFakeAlloc(tid, deNode);
 
       } else { // too many match
         boolean matched = false;
@@ -145,8 +138,7 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
           for (AllocaPair p2 : possibleMatchSet) {
             AllocNode a1 = p1.allocNode;
             AllocNode a2 = p2.allocNode;
-            if (a1.gid == a2.gid)
-              continue;
+            if (a1.gid == a2.gid) continue;
             if (tryMatchPairs(p1, p2, deNode, reachEngine)) {
               matched = true;
               matchedDelloc.add(deNode);
@@ -168,12 +160,7 @@ private void addNewAllocaPairWithFakeAlloc(short tid, DeallocNode deallocNode)
     } // while for each unmatched dealloc
 
     unmatched.retainAll(matchedDelloc);
-    if (unmatched.size() > 0) {
-      //LOG.info("unmatched dealloc {}", unmatched.size());
-    }
 
-//    System.out.println(">>> matchInterThrDealloc after unmatched " + unmatched.size() + "    matched: " + _matchedAlloc());
-	  }
   }
 
   protected void findMatchPairs(HashSet<AllocaPair> possibleMatchSet, long addr, short tid) {
