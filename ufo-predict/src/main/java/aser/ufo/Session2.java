@@ -78,26 +78,27 @@ public class Session2 extends Session {
                 }
             }
 
-
-            writerD.append("#" + sessionID + " Session").append("   candidateUafLs: " + candidateUafLs.size()).append('\n');
-
-            if ("UAF".equals(config.model)){
-              // UAF
-              Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
-              while (iter.hasNext()) {
-                List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
-                if (ls != null && !ls.isEmpty()) outputUafLs(ls, indexer);
-              }
+            //===================process handle=============================
+            if ("UAF".equals(config.model)) {
+                writerD.append("#").append(String.valueOf(sessionID)).append(" Session").append("   candidateUafLs: ").append(String.valueOf(candidateUafLs.size())).append('\n');
+                // UAF
+                Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
+                while (iter.hasNext()) {
+                    List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
+                    if (ls != null && !ls.isEmpty()) outputUafLs(ls, indexer);
+                }
             }
-            if ("REORDER".equals(config.model)){
-              // ReOrder
-              List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
-              if (result != null && !result.isEmpty()) {
-                outputOrders(result, indexer);
-              }
+            if ("REORDER".equals(config.model)) {
+                writerD.append("#").append(String.valueOf(sessionID)).append(" Session").append("   pairList: ").append(String.valueOf(pairList.size())).append('\n');
+
+                // ReOrder
+                List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
+                if (result != null && !result.isEmpty()) {
+                    outputOrders(result, indexer);
+                }
             }
 
-
+            //======================print result================
             if (solver.ct_constr.size() > 0) {
                 ct_vals.push(solver.ct_vals);
                 Pair<Integer, Long> max_total = _Max_total(solver.ct_constr);
