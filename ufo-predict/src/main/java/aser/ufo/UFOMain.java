@@ -30,10 +30,16 @@ public class UFOMain {
       return;
     FileInputStream fin = new FileInputStream(cfg);
     properties.load(fin);
-    config.traceDir = properties.getProperty("trace_dir");
+    config.model = properties.getProperty("model");
+    if (config.model.equals("UAF")){
+      config.traceDir = properties.getProperty("uaf_trace_dir");
+    }else if (config.model.equals("REORDER")){
+      config.traceDir = properties.getProperty("reorder_trace_dir");
+
+    }
+
     config.symbolizer = properties.getProperty("symbolizer");
 
-//    config.binaryImage = properties.getProperty("binary_image");
     config.appname = properties.getProperty("app_name");
 
     LOG.info("app_name {}; trace_dir {}.", config.appname, config.traceDir);
@@ -53,13 +59,12 @@ public class UFOMain {
       config.window_size = Long.parseLong(val);
       LOG.info("window_size {}", config.window_size);
     }
-    
+
     val = properties.getProperty("fast_detect");
     if (val != null && val.length() > 0) {
         config.fast_detect = Boolean.parseBoolean(val);
         LOG.info("fast_detect {}", config.fast_detect);
       }
-
     fin.close();
   }
 

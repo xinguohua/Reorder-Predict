@@ -92,7 +92,7 @@ public class Configuration {
   public boolean rmm_pso;
   public boolean smtlib1;
 
-//  public String binaryImage;
+  public String model;
   public String traceDir;
 
   private boolean help;

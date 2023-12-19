@@ -56,16 +56,6 @@ public class Session2 extends Session {
 
             ct_candidataUaF.add(candidateUafLs.size());
 
-            writerD.append("#" + sessionID + " Session").append("   candidateUafLs: " + candidateUafLs.size()).append('\n');
-
-
-            Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
-            while (iter.hasNext()) {
-                List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
-                if (ls != null && !ls.isEmpty()) outputUafLs(ls, indexer);
-            }
-
-
             List<RacePair> pairList = Lists.newArrayList();
             RacePair racePair = new RacePair();
             pairList.add(racePair);
@@ -87,10 +77,26 @@ public class Session2 extends Session {
                     racePair.setFirstRaceAccNode2((MemAccNode) node);
                 }
             }
-            List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
-            if (result != null && !result.isEmpty()) {
-                outputOrders(result, indexer);
+
+
+            writerD.append("#" + sessionID + " Session").append("   candidateUafLs: " + candidateUafLs.size()).append('\n');
+
+            if ("UAF".equals(config.model)){
+              // UAF
+              Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
+              while (iter.hasNext()) {
+                List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
+                if (ls != null && !ls.isEmpty()) outputUafLs(ls, indexer);
+              }
             }
+            if ("REORDER".equals(config.model)){
+              // ReOrder
+              List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
+              if (result != null && !result.isEmpty()) {
+                outputOrders(result, indexer);
+              }
+            }
+
 
             if (solver.ct_constr.size() > 0) {
                 ct_vals.push(solver.ct_vals);
@@ -155,21 +161,6 @@ public class Session2 extends Session {
         System.out.printf("Session %d | avg vals %d | constr max %d  avg %d | total constr %d | total candidate UaF %d \r\n", sessionID, _Avg(ct_vals), max_max, _Avg(ct_constr), mc_constr.value, _Max_total(ct_candidataUaF).value);
 
         System.out.println("Solved UAF: " + ct_uaf);
-
-
-        //printTraceStats();
-
-
-//    public long c_tstart = 0;
-//    public long c_join = 0;
-//    public long c_lock = 0;
-//    public long c_unlock = 0;
-//    public long c_alloc = 0;
-//    public long c_dealloc = 0;
-//    public long[] c_read = new long[4];
-//    public long[] c_write = new long[4];
-//    public long c_range_w = 0;
-//    public long c_range_r = 0;
     }
 
     public void printTraceStats() {
@@ -329,7 +320,7 @@ public class Session2 extends Session {
 
     public List<RawOrder> solveOrderConstr(List<RacePair> pairList, int limit) {
         ArrayList<RawOrder> ls = new ArrayList<RawOrder>();
-        if (pairList != null || pairList.isEmpty()) {
+        if (pairList == null || pairList.isEmpty()) {
             return ls;
         }
         Iterator<RacePair> iter = pairList.iterator();
