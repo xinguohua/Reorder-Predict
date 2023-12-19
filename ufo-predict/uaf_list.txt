@@ -2031,3 +2031,35 @@ wrap_free (in libclang_rt.tsan_osx_dynamic.dylib) (sanitizer_malloc_mac.inc:144)
 
 #1 Session   candidateUafLs: 0
 
+#1 Session   candidateUafLs: 0
+
+------- #1 first  call stack  
+/ufo/datarace.cpp:17 pc: 0x4b5f92
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+------- #1 second call stack  
+/ufo/datarace.cpp:18 pc: 0x4b5faf
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+#1 Session   candidateUafLs: 2
+#1  UAF
+
+------- #1 use call stack  
+/ufo/test.cc:18 pc: 0x4b5fb8
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+------- #0 free call stack  
+/ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:624 pc: 0x4271c8
+  /ufo/test.cc:29 pc: 0x4b6099
+    /ufo/test.cc:52 pc: 0x4b632e
+#2  UAF
+
+------- #1 use call stack  
+/ufo/test.cc:20 pc: 0x4b6008
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+------- #0 free call stack  
+/ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:624 pc: 0x4271c8
+  /ufo/test.cc:29 pc: 0x4b6099
+    /ufo/test.cc:60 pc: 0x4b63b9
+
