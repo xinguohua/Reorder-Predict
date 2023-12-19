@@ -78,14 +78,6 @@ public class Session2 extends Session {
 
 
         __c3 += candidateUafLs.size();
-        //      5485
-
-        //     System.out.println("candidateUafLs.size()  " + candidateUafLs.size() + "    " + __c3);
-
-        //      if (System.currentTimeMillis() > 1) {
-        //        System.out.println(" continue;");
-        //        continue;
-        //      }
 
         __c1 += indexer.metaInfo.sharedAddrs.size();
         for (HashSet<AllocaPair> sp : candidateUafLs.values()) {
@@ -108,7 +100,7 @@ public class Session2 extends Session {
         Iterator<Map.Entry<MemAccNode, HashSet<AllocaPair>>> iter = candidateUafLs.entrySet().iterator();
         while (iter.hasNext()) {
           List<RawUaf> ls = solveUafConstr(iter, UFO.PAR_LEVEL);
-          if (ls != null && ls.size() > 0)
+          if (ls != null && !ls.isEmpty())
             outputUafLs(ls, indexer);
         }
 
@@ -120,19 +112,22 @@ public class Session2 extends Session {
         for (AbstractNode node : indexer.getAllNodeSeq()) {
           if (node.gid == 4294967303L) {
             racePair.setFirstRaceAccNode1((MemAccNode) node);
+            //node.gid = 0;
           }
           if (node.gid == 4294967304L) {
             racePair.setSecondRaceAccNode2((MemAccNode) node);
+            //node.gid =2;
           }
           if (node.gid == 8589934595L) {
             racePair.setSecondRaceAccNode1((MemAccNode) node);
+            //node.gid =1;
           }
           if (node.gid == 8589934596L) {
             racePair.setFirstRaceAccNode2((MemAccNode) node);
           }
         }
           List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
-          if (result != null && result.size() > 0) {
+          if (result != null && !result.isEmpty()) {
 
           }
 
