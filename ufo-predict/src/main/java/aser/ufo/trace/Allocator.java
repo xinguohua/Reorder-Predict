@@ -3,6 +3,8 @@ package aser.ufo.trace;
 import aser.ufo.NewReachEngine;
 import aser.ufo.SimpleReachEngine;
 import aser.ufo.UFO;
+import aser.ufo.misc.RacePair;
+import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.longs.Long2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;

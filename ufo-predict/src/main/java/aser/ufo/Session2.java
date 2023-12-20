@@ -55,27 +55,27 @@ public class Session2 extends Session {
 
             ct_candidataUaF.add(candidateUafLs.size());
 
-            List<RacePair> pairList = Lists.newArrayList();
-            RacePair racePair = new RacePair();
-            pairList.add(racePair);
-            // 0 不存在依赖的一对 // 1存在依赖的一对
-            for (AbstractNode node : indexer.getAllNodeSeq()) {
-                if (node.gid == 4294967303L) {
-                    racePair.setFirstRaceAccNode1((MemAccNode) node);
-                    //node.gid = 0;
-                }
-                if (node.gid == 4294967304L) {
-                    racePair.setSecondRaceAccNode2((MemAccNode) node);
-                    //node.gid =2;
-                }
-                if (node.gid == 8589934595L) {
-                    racePair.setSecondRaceAccNode1((MemAccNode) node);
-                    //node.gid =1;
-                }
-                if (node.gid == 8589934596L) {
-                    racePair.setFirstRaceAccNode2((MemAccNode) node);
-                }
-            }
+//            List<RacePair> pairList = Lists.newArrayList();
+//            RacePair racePair = new RacePair();
+//            pairList.add(racePair);
+//            // 0 不存在依赖的一对 // 1存在依赖的一对
+//            for (AbstractNode node : indexer.getAllNodeSeq()) {
+//                if (node.gid == 4294967303L) {
+//                    racePair.setFirstRaceAccNode1((MemAccNode) node);
+//                    //node.gid = 0;
+//                }
+//                if (node.gid == 4294967304L) {
+//                    racePair.setSecondRaceAccNode2((MemAccNode) node);
+//                    //node.gid =2;
+//                }
+//                if (node.gid == 8589934595L) {
+//                    racePair.setSecondRaceAccNode1((MemAccNode) node);
+//                    //node.gid =1;
+//                }
+//                if (node.gid == 8589934596L) {
+//                    racePair.setFirstRaceAccNode2((MemAccNode) node);
+//                }
+//            }
 
             //===================process handle constr solve=============================
             if ("UAF".equals(config.model)) {
@@ -88,10 +88,10 @@ public class Session2 extends Session {
                 }
             }
             if ("REORDER".equals(config.model)) {
-                writerD.append("#").append(String.valueOf(sessionID)).append(" Session").append("   pairList: ").append(String.valueOf(pairList.size())).append('\n');
+                writerD.append("#").append(String.valueOf(sessionID)).append(" Session").append("   pairList: ").append(String.valueOf(indexer.orderPairList.size())).append('\n');
 
                 // ReOrder
-                List<RawOrder> result = solveOrderConstr(pairList, UFO.PAR_LEVEL);
+                List<RawOrder> result = solveOrderConstr(indexer.getOrderPairList(), UFO.PAR_LEVEL);
                 if (result != null && !result.isEmpty()) {
                     outputOrders(result, indexer);
                 }

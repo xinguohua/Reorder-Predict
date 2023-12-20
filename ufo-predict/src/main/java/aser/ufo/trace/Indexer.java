@@ -7,6 +7,7 @@ import aser.ufo.SimpleReachEngine;
 import aser.ufo.UFO;
 import aser.ufo.VectorClock;
 import aser.ufo.misc.Pair;
+import aser.ufo.misc.RacePair;
 import aser.ufo.misc.RawUaf;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -40,6 +41,17 @@ public class Indexer {
     public static final int PRE_SEARCH = 2;
     public static final int PRE_NORM = 3;
     protected volatile int state_ = PRE_LOAD;
+
+    public List<RacePair> getOrderPairList() {
+      return orderPairList;
+    }
+
+    public void setOrderPairList(List<RacePair> orderPairList) {
+      this.orderPairList = orderPairList;
+    }
+
+    public List<RacePair> orderPairList = Lists.newArrayList();
+
 
     public int getState() {
       return state_;
@@ -84,6 +96,7 @@ public class Indexer {
 
       protected Long2ObjectOpenHashMap<ArrayList<WriteNode>> raceAddr2SeqWrite = new Long2ObjectOpenHashMap<ArrayList<WriteNode>>(UFO.INITSZ_L);
       protected Long2ObjectOpenHashMap<ArrayList<ReadNode>> raceAddr2SeqRead = new Long2ObjectOpenHashMap<ArrayList<ReadNode>>(UFO.INITSZ_L);
+
 
 
       //  addr -> mem_acc
@@ -232,6 +245,42 @@ public class Indexer {
         }
       }
       System.out.println("race detect========"+ addr2RacePairs);
+      //这要和静态分析串联起来
+      // addr 针对那两个冲突的地址 挑选出来pair
+      // 静态分析给的信息 addr1 addr2 数据竞争 假设得到 21809668  21809664
+      RacePair racePair = new RacePair();
+      if (addr2RacePairs.containsKey(21809668L) || addr2RacePairs.containsKey(21809664L)){
+        List<Pair<MemAccNode, MemAccNode>> pairs = addr2RacePairs.get(21809668L);
+        List<Pair<MemAccNode, MemAccNode>> pairs1 = addr2RacePairs.get(21809664L);
+        List<Pair<MemAccNode, MemAccNode>> allPairs = Lists.newArrayList();
+        allPairs.addAll(pairs);
+        allPairs.addAll(pairs1);
+        List<MemAccNode> allNode = Lists.newArrayList();
+        for (Pair<MemAccNode, MemAccNode> allPair : allPairs) {
+          allNode.add(allPair.key);
+          allNode.add(allPair.value);
+        }
+
+        for (MemAccNode node : allNode) {
+          // 给地址 addr/行数 对应
+          if (node.gid == 4294967303L ) {
+            racePair.setFirstRaceAccNode1((MemAccNode) node);
+            //node.gid = 0;
+          }
+          if (node.gid == 4294967304L ) {
+            racePair.setSecondRaceAccNode2((MemAccNode) node);
+            //node.gid =2;
+          }
+          if (node.gid == 8589934595L) {
+            racePair.setSecondRaceAccNode1((MemAccNode) node);
+            //node.gid =1;
+          }
+          if (node.gid == 8589934596L ){
+            racePair.setFirstRaceAccNode2((MemAccNode) node);
+          }
+        }
+      }
+      orderPairList.add(racePair);
       metaInfo.sharedAddrs = sharedAddrSet;
       metaInfo.countAllNodes = getAllNodeSeq().size();
 

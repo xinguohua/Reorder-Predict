@@ -2275,3 +2275,33 @@ wrap_free (in libclang_rt.tsan_osx_dynamic.dylib) (sanitizer_malloc_mac.inc:144)
 /ufo/datarace.cpp:18 pc: 0x4b5faf
   /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
 
+#1 Session   pairList: 1
+
+------- #1 first  call stack  
+/ufo/datarace.cpp:17 pc: 0x4b5f92
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+------- #1 second call stack  
+/ufo/datarace.cpp:18 pc: 0x4b5faf
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+#1 Session   pairList: 1
+
+#1 Session   pairList: 1
+
+#1 Session   pairList: 1
+
+#1 Session   pairList: 1
+
+#1 Session   pairList: 1
+
+#1 Session   pairList: 1
+
+------- #1 first  call stack  
+/ufo/datarace.cpp:17 pc: 0x4b5f92
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
+------- #1 second call stack  
+/ufo/datarace.cpp:18 pc: 0x4b5faf
+  /ufo/llvm-6.0.0/projects/compiler-rt/lib/tsan/rtl/tsan_interceptors.cc:882 pc: 0x423e9e
+
