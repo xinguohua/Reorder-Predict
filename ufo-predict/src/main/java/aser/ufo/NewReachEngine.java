@@ -193,21 +193,15 @@ public static void postprocessing()
     VectorClock tid1VC = getThreadVectorClock(from.tid);
     VectorClock tid2VC = getThreadVectorClock(to.tid);
 
-    
     tid1VC.tick();
     tid2VC.tick();
-    //
-    
+
     //create new VC for the sync points
     
     VectorClock vc1 = new VectorClock(tid1VC);
     VectorClock vc2 = new VectorClock(tid2VC);
     vc2.join(vc1);
-    
 
-//    long fromID = Bytes.longs.add(from.tid, from.gid);
-//    long toID = Bytes.longs.add(to.tid, to.gid);
-    
     //save vector clock
     long2VCs.put(from.gid, vc1);
     long2VCs.put(to.gid, vc2);
