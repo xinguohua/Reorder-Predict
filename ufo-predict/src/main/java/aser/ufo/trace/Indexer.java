@@ -8,6 +8,9 @@ import aser.ufo.UFO;
 import aser.ufo.VectorClock;
 import aser.ufo.misc.Pair;
 import aser.ufo.misc.RawUaf;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.*;
@@ -78,6 +81,11 @@ public class Indexer {
       protected Long2LongOpenHashMap initWrites = new Long2LongOpenHashMap(UFO.INITSZ_L);
 
       protected Long2ObjectOpenHashMap<ArrayList<WriteNode>> addr2SeqWrite = new Long2ObjectOpenHashMap<ArrayList<WriteNode>>(UFO.INITSZ_L);
+
+      protected Long2ObjectOpenHashMap<ArrayList<WriteNode>> raceAddr2SeqWrite = new Long2ObjectOpenHashMap<ArrayList<WriteNode>>(UFO.INITSZ_L);
+      protected Long2ObjectOpenHashMap<ArrayList<ReadNode>> raceAddr2SeqRead = new Long2ObjectOpenHashMap<ArrayList<ReadNode>>(UFO.INITSZ_L);
+
+
       //  addr -> mem_acc
 //  protected Long2ObjectOpenHashMap<ArrayList<MemAccNode>> addr2sqeAcc = new Long2ObjectOpenHashMap<ArrayList<MemAccNode>>(UFO.INITSZ_L * 2);
 
@@ -152,11 +160,12 @@ public class Indexer {
       pass1st();
 
       // check reachability engine
-      
+
       allocator.matchInterThrDealloc(reachEngine);
 
       // 2. second pass:
-      LongOpenHashSet sharedAddrSet = findSharedAcc();
+      LongOpenHashSet raceAddrSet = new LongOpenHashSet(UFO.INITSZ_L * 2);
+      LongOpenHashSet sharedAddrSet = findSharedAcc(raceAddrSet);
 
       // 3. third pass, handle shared mem acc (index: addr tid dealloc allnode)
       for (Short2ObjectOpenHashMap.Entry<ArrayList<AbstractNode>> e : _rawTid2seq.short2ObjectEntrySet()) {
@@ -177,6 +186,9 @@ public class Indexer {
               tidNodes.add(memNode);
               handleTSMemAcc(tid, memNode);
             }
+            if (raceAddrSet.contains(memNode.getAddr())) {
+              handleRaceMemAcc(tid, memNode);
+            }
 
           } else if (!(node instanceof FuncEntryNode)
               && !(node instanceof FuncExitNode)) {
@@ -188,6 +200,38 @@ public class Indexer {
       } // for each thread
 
 
+      // race detect
+      Map<Long, List<Pair<MemAccNode, MemAccNode>>> addr2RacePairs = Maps.newHashMap();
+      for (Long addr : shared.raceAddr2SeqWrite.keySet()) {
+        if (shared.raceAddr2SeqWrite.containsKey(addr)){
+          ArrayList<WriteNode> writeNodes = shared.raceAddr2SeqWrite.get(addr);
+          ArrayList<ReadNode> readNodes = shared.raceAddr2SeqRead.get(addr);
+          ArrayList<MemAccNode> allNodes = new ArrayList<MemAccNode>();
+          allNodes.addAll(writeNodes);
+          allNodes.addAll(readNodes);
+          Set<String> repeatKey = Sets.newHashSet();
+          List<Pair<MemAccNode, MemAccNode>> raceList = Lists.newArrayList();
+          for (WriteNode writeNode : writeNodes) {
+            for (MemAccNode allNode : allNodes) {
+              if (!writeNode.equals(allNode) && // 检查不是相同对象
+                      writeNode.gid != allNode.gid &&
+                      writeNode.tid != allNode.tid &&
+                      !NewReachEngine.canReach(writeNode, allNode) &&
+                      !repeatKey.contains(String.valueOf(writeNode.gid) + String.valueOf(allNode.gid))) {
+
+                repeatKey.add(String.valueOf(writeNode.gid) + String.valueOf(allNode.gid));
+                repeatKey.add(String.valueOf(allNode.gid) + String.valueOf(writeNode.gid));
+                Pair<MemAccNode, MemAccNode> racePair = new Pair<MemAccNode, MemAccNode>(writeNode, allNode);
+                raceList.add(racePair);
+              }
+            }
+          }
+          if (!raceList.isEmpty()){
+            addr2RacePairs.put(addr, raceList);
+          }
+        }
+      }
+      System.out.println("race detect========"+ addr2RacePairs);
       metaInfo.sharedAddrs = sharedAddrSet;
       metaInfo.countAllNodes = getAllNodeSeq().size();
 
@@ -254,7 +298,7 @@ public class Indexer {
      * addr write / read diff threads
      * @return
      */
-    protected LongOpenHashSet findSharedAcc() {
+    protected LongOpenHashSet findSharedAcc(LongOpenHashSet raceAddrSet) {
 
       Long2ObjectOpenHashMap<ShortOpenHashSet> addr2TidReads = new Long2ObjectOpenHashMap<ShortOpenHashSet>(UFO.INITSZ_S);
       Long2ObjectOpenHashMap<ShortOpenHashSet> addr2TidWrites = new Long2ObjectOpenHashMap<ShortOpenHashSet>(UFO.INITSZ_S);
@@ -296,16 +340,19 @@ public class Indexer {
       addrs.addAll(addr2TidWrites.keySet());
       for (long addr : addrs) {
         ShortOpenHashSet wtids = addr2TidWrites.get(addr);
-        if (wtids != null && wtids.size() > 0) {
+        if (wtids != null && !wtids.isEmpty()) {
           if (wtids.size() > 1) { // write thread > 1
             sharedAddrSet.add(addr);
+            raceAddrSet.add(addr);
           } else if (wtids.size() == 1) { // only one write
             short wtid = wtids.iterator().nextShort();
             ShortOpenHashSet rtids = addr2TidReads.get(addr);
             if (rtids != null) {
               rtids.remove(wtid); // remove self
-              if (rtids.size() > 0)// another read
+              if (!rtids.isEmpty()) {// another read
                 sharedAddrSet.add(addr);
+                raceAddrSet.add(addr);
+              }
             }
           }
         }
@@ -346,6 +393,35 @@ public class Indexer {
         if (!shared.initWrites.containsKey(addr)) {
           shared.initWrites.put(addr, ((WriteNode) node).value);
         }
+      }
+    }
+
+
+
+    protected void handleRaceMemAcc(int tid, MemAccNode node) {
+      // index: addr -> acc
+      long addr = node.getAddr();
+
+      // index: seq read, seq write
+      if (node instanceof RangeReadNode) {
+
+      } else if (node instanceof ReadNode) {
+        shared.addReadNode((ReadNode) node);
+        ArrayList<ReadNode> seqR = shared.raceAddr2SeqRead.get(addr);
+        if (seqR == null) {
+          seqR = new ArrayList<ReadNode>(UFO.INITSZ_L);
+          shared.raceAddr2SeqRead.put(addr, seqR);
+        }
+        seqR.add((ReadNode) node);
+      } else if (node instanceof RangeWriteNode) {
+
+      } else if (node instanceof WriteNode) {
+        ArrayList<WriteNode> seqW = shared.raceAddr2SeqWrite.get(addr);
+        if (seqW == null) {
+          seqW = new ArrayList<WriteNode>(UFO.INITSZ_L);
+          shared.raceAddr2SeqWrite.put(addr, seqW);
+        }
+        seqW.add((WriteNode) node);
       }
     }
 
