@@ -186,11 +186,6 @@ public class Session2 extends Session {
         for (int i = 1; i < 4; i++)
             writes += TLEventSeq.stat.c_write[i];
 
-//    System.out.println("Read Events: " + reads);
-//    System.out.println("Write Events: " + writes);
-//    System.out.println("RRead Events: " + TLEventSeq.stat.c_range_r);
-//    System.out.println("RWrite Events: " + TLEventSeq.stat.c_range_w);
-
         long toreads = reads + TLEventSeq.stat.c_range_r;
         long towrites = writes + TLEventSeq.stat.c_range_w;
 
