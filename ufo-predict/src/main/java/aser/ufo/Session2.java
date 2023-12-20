@@ -30,7 +30,7 @@ public class Session2 extends Session {
 
     @Override
     public void start() {
-
+        //===================load trace init Engine=============================
         traceLoader.preprocessWaitNotify(this);//JEFF
         printTraceStats();//JEFF
 

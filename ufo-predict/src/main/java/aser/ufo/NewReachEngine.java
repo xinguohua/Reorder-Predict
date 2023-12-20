@@ -37,34 +37,7 @@ public class NewReachEngine {
 public static  Long2ObjectOpenHashMap<ArrayList<IWaitNotifyNode>> cond2WaitNotifyLs = new Long2ObjectOpenHashMap<ArrayList<IWaitNotifyNode>>(UFO.INITSZ_SYNC);
 
 public static void saveToWaitNotifyList(IWaitNotifyNode node) {
-	
 	addToOrderedSyncList(node);
-
-//	long cond = node.getAddr();
-//	  ArrayList<IWaitNotifyNode> waitNotifyLs = cond2WaitNotifyLs.get(cond);
-//	  if(waitNotifyLs == null)
-//	  {
-//		  waitNotifyLs = new ArrayList<IWaitNotifyNode>(UFO.INITSZ_SYNC * 5);
-//		  cond2WaitNotifyLs.put(cond, waitNotifyLs);
-//		  waitNotifyLs.add(node);
-//	  }
-//	  else
-//	  {
-//		  //make sure it is ordered by the idx
-//		  if(waitNotifyLs.get(0).getIndex()>node.getIndex())
-//			  waitNotifyLs.add(0, node);
-//		  else
-//		  for(int i=waitNotifyLs.size()-1;i>=0;i--)
-//		  {
-//			  IWaitNotifyNode node2 = waitNotifyLs.get(i);
-//			  if(node2.getIndex()<node.getIndex())
-//			  {
-//				  waitNotifyLs.add(node);//ordered by idx
-//				  break;
-//			  }
-//		  }
-//	  
-//	  }
 }
 public static void saveToStartNodeList(TStartNode node)
 {
