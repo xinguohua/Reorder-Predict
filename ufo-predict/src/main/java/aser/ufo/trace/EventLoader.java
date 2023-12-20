@@ -266,7 +266,6 @@ public class EventLoader {
       FileInfo info = e.getValue();
       if (info.fileOffset >= info.fsize - 5) {
         iter.remove();
-        //aliveTids.remove(info.tid);//JEFF 
       }
     }
 

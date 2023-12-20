@@ -225,13 +225,6 @@ public static void postprocessing()
     	long gid2_up = findSyncGidUp(tid2, gid2);
     	if (gid2_up ==0)// no sync point before gid2 from tid2
     		return false;
-    	
-    	//NO CACHE
-    	
-    	//Instead, maintain a vector clock for each sync point 
-    	
-//    	long key1 = Bytes.longs.add(tid1, gid1_down);
-//    	long key2 = Bytes.longs.add(tid2, gid2_up);
 
      	VectorClock vc1 = 	long2VCs.get(gid1_down);
      	VectorClock vc2 = 	long2VCs.get(gid2_up);

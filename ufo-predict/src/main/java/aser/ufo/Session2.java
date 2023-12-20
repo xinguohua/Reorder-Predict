@@ -39,13 +39,12 @@ public class Session2 extends Session {
 
         while (traceLoader.hasNext()) {
             sessionID++;
+            //===================load file event analyze init indexer=============================
             Indexer indexer = new Indexer();
             traceLoader.populateIndexer(indexer, this);
-
             loadedEventCount += indexer.metaInfo.rawNodeCount;
 
 
-            //ADD THREAD FORK-JOIN ORDER TO PRUNE AWAY OBVIOUS CASES
 
             HashMap<MemAccNode, HashSet<AllocaPair>> candidateUafLs = indexer.getMachtedAcc();
 
